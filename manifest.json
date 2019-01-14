@@ -8,7 +8,7 @@
 		"tabs"
 	],
 	"background": {
-		"scripts": ["context.js"],
+		"scripts": ["tabs.js"],
 		"presistent": false
 	},
 	"browser_action": {
