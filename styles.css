@@ -5,6 +5,8 @@ body {
 b {
 	font-size: 18px;
 	color: black;
+	text-align: center;
+	display: block;
 }
 
 hr {
