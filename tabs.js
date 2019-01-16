@@ -1,89 +1,72 @@
-var openDividers = {}
+//DEBUG START
+var reset = false
 
-function send(dividerName, message) {
-	if(dividerName in openDividers) {
-		var openDivider = openDividers[dividerName]
+if(reset) {
+	chrome.storage.local.clear()
 
-		if(openDivider.loaded) {
-			chrome.tabs.sendMessage(openDivider.id, message)
-		} else {
-			chrome.tabs.onUpdated.addListener(
-				function apply(tabId, changeInfo, updatedTab) {
-					if(tabId == openDivider.id && changeInfo.status == "complete") {
-						chrome.tabs.onUpdated.removeListener(apply)
-						openDividers[dividerName].loaded = true
+	fetch(chrome.runtime.getURL("Example.json")).then(response => response.json()).then(json => {
+		chrome.storage.local.set(json)
 
-						chrome.tabs.sendMessage(tabId, message)
-					}
-				}
-			)
-		}
-	}
+		chrome.storage.local.get(null, items => {
+		console.log(items)
+	})
+	})
+} else {
+	chrome.storage.local.get(null, items => {
+		console.log(items)
+	})
 }
+//DEBUG END
 
 function compress(info, tab) {
-	var dividerName = info.menuItemId.split("_")[2]
-
-	console.log("Compressing \"" + tab.title + "\" to " + dividerName)
+	var divider = info.menuItemId.split("_")[2]
 
 	//Remove the current tab
 	chrome.tabs.remove(tab.id)
 
-	//Create if not already
-	if(!(dividerName in openDividers)) {
-		//Register the divider
-		openDividers[dividerName] = {
-			"id": 0,
-			"loaded": false,
-			"open": false
-		}
+	//Get the path for the divider
+	var dividerPagePath = "dividers." + divider + ".pages"
 
-		//Create the divider tab
-		chrome.tabs.create(
-			{
-				"url": "dividers/divider.html",
-				"active": false
-			},
-			function(tab) {
-				openDividers[dividerName].id = tab.id
-			}
-		)
-	}
+	chrome.storage.local.get(dividerPagePath, items => {
+		var pages = items[dividerPagePath]
 
-	send(dividerName, {
-		"command": "apply",
-		"name": dividerName
-	})
+		//Add the page to the array
+		pages.push({
+			"title": tab.title,
+			"url": tab.url,
+			"time": new Date().getTime()
+		})
 
-	send(dividerName, {
-		"command": "append",
-		"title": tab.title,
-		"url": tab.url
+		//Update storage accordingly
+		chrome.storage.local.set({[dividerPagePath]: pages})
 	})
 }
 
-function addContext(dividerName) {
-	chrome.contextMenus.create({
-		"parentId": "menu_page",
-		"id": "menu_page_" + dividerName,
-		"title": dividerName,
-		"onclick": compress
-	})
-
-	chrome.contextMenus.create({
-		"id": "menu_icon_" + dividerName,
-		"title": "Compress to " + dividerName,
-		"contexts": ["browser_action"],
-		"onclick": compress
-	})
-}
-
+//'Compress to' for context menu
 chrome.contextMenus.create({
 	"id": "menu_page",
 	"title": "Compress to",
 	"contexts": ["page", "frame", "selection", "page_action"]
 })
 
-//addContext("New")
-addContext("YouTube")
+//Create context menus for each divider under dividers
+chrome.storage.local.get("dividers", items => {
+	//Iterate through stored divider names
+	items.dividers.forEach(element => {
+		//Create the context menu shown when right-clicking on a page
+		chrome.contextMenus.create({
+			"parentId": "menu_page",
+			"id": "menu_page_" + element,
+			"title": element,
+			"onclick": compress
+		})
 
+		//Create the context menu shown when right-clicking the icon on the toolbar
+		chrome.contextMenus.create({
+			"id": "menu_icon_" + element,
+			"title": "Compress to " + element,
+			"contexts": ["browser_action"],
+			"onclick": compress
+		})
+	})
+})

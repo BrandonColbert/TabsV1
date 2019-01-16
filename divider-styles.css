@@ -1,0 +1,61 @@
+#name {
+	font-size: 32px;
+	color: black;
+}
+
+.subsection {
+	font-size: 24px;
+	color: rgb(20, 20, 20);
+}
+
+p {
+	font-size: 18px;
+	color: darkslategray;
+	outline: none;
+	text-decoration: none;
+}
+
+a {
+	margin-left: 0.5em;
+	font-size: 14px;
+}
+
+.page {
+	margin-top: 20px;
+}
+
+.pageButton {
+	/*Position*/
+	height: 15px;
+	width: 15px;
+	margin-right: 8px;
+	border-radius: 15%;
+
+	/*Appearance*/
+	cursor: pointer;
+	outline: none;
+	border: none;
+
+	/*Color*/
+	background-color: lightgray;
+}
+
+.pageButton:hover {
+	background-color: dimgray;
+}
+
+.commandButton {
+	cursor: pointer;
+	background-color: lightgray;
+	outline: none;
+	border: none;
+	border-radius: 12px;
+	color: black;
+	font-size: 15px;
+	margin-top: 10px;
+}
+
+.commandButton:hover {
+	background-color: gray;
+	color: white;
+}

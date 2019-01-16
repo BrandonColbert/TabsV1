@@ -1,67 +1,115 @@
-var htmlDividers = document.getElementById("tab-dividers")
+function decompress(tabItem, page) {
+	//Find the divider path
+	var dividerPagePath = "dividers." + tabItem.parentElement.firstChild.innerText + ".pages"
 
-class Divider {
-	constructor(name) {
-		this.name = name
-		this.categoryId = "tabs-category-" + name
+	chrome.storage.local.get(dividerPagePath, pageItems => {
+		//Remove pages with matching urls
+		const pages = pageItems[dividerPagePath].filter(dividerPage => {
+			return dividerPage.url !== page.url
+		})
 
-		if(!(name in Divider.dividers))
-			Divider.dividers[name] = []
-
-		if(document.getElementById(this.categoryId) == null) {
-			var div = document.createElement("details")
-			var sum = document.createElement("summary")
-			var txt = document.createTextNode(name)
-
-			sum.appendChild(txt)
-			div.appendChild(sum)
-			htmlDividers.appendChild(div)
-
-			div.id = this.categoryId
-		}
-	}
-
-	add(item) {
-		Divider.dividers[this.name].push(item)
-
-		var itemId = "tabs-category-item-" + item
-
-		if(document.getElementById(itemId) == null) {
-			var tabItem = document.createElement("p")
-			var tabName = document.createTextNode(item)
-
-			tabItem.appendChild(tabName)
-			document.getElementById(this.categoryId).appendChild(tabItem)
-
-			tabItem.id = itemId
-		}
-
-		return this
-	}
-
-	remove(item) {
-		var divider = Divider.dividers[this.name]
-		divider.splice(divider.indexOf(item), 1)
-
-		return this
-	}
+		//Update
+		chrome.storage.local.set({[dividerPagePath]: pages})
+	})
 }
 
-function getDivider(name) {
-	if(Divider.dividers == null || Divider.instances == null)
-		Divider.dividers = {}
-		Divider.instances = {}
+function createPageElement(page) {
+	//Create the button for the page and define actions for clicking it
+	var tabItem = document.createElement("button")
+	tabItem.appendChild(document.createTextNode(page.title))
 
-	if(!(name in Divider.instances))
-		Divider.instances[name] = new Divider(name)
+	//Navigate to page on left-click
+	tabItem.addEventListener("click", () => {
+		chrome.tabs.update(
+			{
+				"url": page.url
+			},
+			tab => decompress(tabItem, page)
+		)
+	})
 
-	return Divider.instances[name]
+	//Open in new tab on right-click
+	tabItem.addEventListener("contextmenu", event => {
+		//Disable context menu
+		event.preventDefault()
+
+		chrome.tabs.getSelected(tab => {
+			//Open url in a new tab next to the same tab
+			chrome.tabs.create(
+				{
+					"url": page.url,
+					"active": false,
+					"index": tab.index + 1
+				},
+				tab => decompress(tabItem, page)
+			)
+		})
+	})
+
+	return tabItem
 }
 
-getDivider("YouTube").add("user/LinusTechTips").add("user/BlueXephos").add("user/Vsauce")
-getDivider("Reddit").add("r/All").add("r/Aww").add("r/AskScience")
-getDivider("StackOverflow")
-getDivider("GitHub")
-getDivider("TheVerge")
+//Initialize with dividers and items preadded
+chrome.storage.local.get("dividers", items => {
+	//Iterate through stored divider names
+	items.dividers.forEach(element => {
+		//Get the page path based on the element name
+		var dividerPagePath = "dividers." + element + ".pages"
 
-console.log(Divider.dividers)
+		//Create the dividers details and assign it the same id as its page path
+		var div = document.createElement("details")
+		div.id = dividerPagePath
+
+		//Make the name the same as the divider name
+		var sum = document.createElement("summary")
+		var txt = document.createTextNode(element)
+
+		//Show button to navigate to the divider's page
+		var pageButton = document.createElement("button")
+		pageButton.classList.add("pageButton")
+
+		pageButton.addEventListener("click", () => {
+			//Open divider with the dividier's name as metadata
+			chrome.tabs.create({
+				"url": "divider.html#" + element
+			})
+		})
+
+		//Display them properly in html
+		sum.appendChild(pageButton)
+		sum.appendChild(txt)
+		div.appendChild(sum)
+		document.getElementById("tab-dividers").appendChild(div)
+
+		//Populate the urls in the divider
+		chrome.storage.local.get(dividerPagePath, pageItems => {
+			//Get all the stored pages for the divider and place them in it
+			pageItems[dividerPagePath].forEach(page => {
+				div.appendChild(createPageElement(page))
+			})
+		})
+	})
+})
+
+//Update the view in case it is changed somewhere
+chrome.storage.onChanged.addListener((changes, areaName) => {
+	//Regex to make sure the change involves a divider page
+	var re = RegExp("^dividers\\..*\\.pages$")
+
+	//Get all the keys that were changed
+	for(var key in changes) {
+		//Check if divider page was changed
+		if(re.test(key)) {
+			var divider = document.getElementById(key)
+
+			//Remove all the children from details besides the summary name
+			while(divider.childElementCount > 1)
+				divider.removeChild(divider.lastChild)
+
+			//Add the new titles
+			changes[key].newValue.forEach(page => {
+				divider.appendChild(createPageElement(page))
+			})
+		}
+	}
+})

@@ -5,7 +5,11 @@
 	"permissions": [
 		"activeTab",
 		"contextMenus",
+		"storage",
 		"tabs"
+	],
+	"web_accessible_resources": [
+		"divider*"
 	],
 	"background": {
 		"scripts": ["tabs.js"],

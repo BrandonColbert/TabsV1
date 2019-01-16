@@ -1,0 +1,101 @@
+::-webkit-scrollbar {
+	width: 5px;
+}
+
+::-webkit-scrollbar-track {
+	background: gainsboro;
+}
+
+::-webkit-scrollbar-thumb {
+	background: silver;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: darkgray;
+}
+
+body {
+	min-width: 150px;
+	max-width: 150px;
+}
+
+b {
+	font-size: 18px;
+	color: black;
+	text-align: center;
+	display: block;
+	user-select: none;
+}
+
+hr {
+	border-top: 1px solid black;
+}
+
+details {
+	margin-top: 12px;
+}
+
+details > summary {
+	font-size: 16px;
+	color: darkslategray;
+	outline: none;
+	user-select: none;
+
+	max-width: 128px;
+	word-wrap: normal;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+details[open] summary {
+	background-color: rgb(250, 250, 250);
+	color: gray;
+}
+
+details > summary::-webkit-details-marker {
+	display: none;
+}
+
+details > button {
+	cursor: pointer;
+	background: none;
+	border: none;
+	outline: none;
+	font: inherit;
+	text-align: left;
+	word-wrap: inherit;
+
+	display: block;
+	margin-top: 12px;
+
+	margin-left: 20px;
+	font-size: 14px;
+	color: gray;
+	user-select: none;
+}
+
+:hover {
+	color: black !important;
+}
+
+.pageButton {
+	/*Position*/
+	height: 12px;
+	position: absolute;
+	left: 85%;
+	margin-top: 4px;
+
+	/*Appearance*/
+	cursor: pointer;
+	outline: none;
+	border: none;
+	border-radius: 100%;
+
+	/*Color*/
+	transition-duration: 0.4s;
+	background-color: gainsboro;
+}
+
+.pageButton:hover {
+	background-color: lightslategray;
+}
