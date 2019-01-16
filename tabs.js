@@ -8,8 +8,8 @@ if(reset) {
 		chrome.storage.local.set(json)
 
 		chrome.storage.local.get(null, items => {
-		console.log(items)
-	})
+			console.log(items)
+		})
 	})
 } else {
 	chrome.storage.local.get(null, items => {

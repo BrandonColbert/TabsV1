@@ -57,12 +57,17 @@ chrome.storage.local.get("dividers", items => {
 		var dividerPagePath = "dividers." + element + ".pages"
 
 		//Create the dividers details and assign it the same id as its page path
-		var div = document.createElement("details")
-		div.id = dividerPagePath
+		var details = document.createElement("details")
+		details.id = dividerPagePath
 
 		//Make the name the same as the divider name
-		var sum = document.createElement("summary")
-		var txt = document.createTextNode(element)
+		var summary = document.createElement("summary")
+
+		//Double clickable text to edit divider name
+		var txt = document.createElement("font")
+		txt.addEventListener("dblclick", () => {
+			console.log("Rename")
+		})
 
 		//Show button to navigate to the divider's page
 		var pageButton = document.createElement("button")
@@ -76,16 +81,17 @@ chrome.storage.local.get("dividers", items => {
 		})
 
 		//Display them properly in html
-		sum.appendChild(pageButton)
-		sum.appendChild(txt)
-		div.appendChild(sum)
-		document.getElementById("tab-dividers").appendChild(div)
+		txt.appendChild(document.createTextNode(element))
+		summary.appendChild(pageButton)
+		summary.appendChild(txt)
+		details.appendChild(summary)
+		document.getElementById("tab-dividers").appendChild(details)
 
 		//Populate the urls in the divider
 		chrome.storage.local.get(dividerPagePath, pageItems => {
 			//Get all the stored pages for the divider and place them in it
 			pageItems[dividerPagePath].forEach(page => {
-				div.appendChild(createPageElement(page))
+				details.appendChild(createPageElement(page))
 			})
 		})
 	})
