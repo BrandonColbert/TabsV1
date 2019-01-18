@@ -1,20 +1,7 @@
+import * as DividerUtils from "/DividerUtils.js"
+
 function getDivider() {
-	return decodeURIComponent(window.location.href.split("#")[1])
-}
-
-function decompress(page) {
-	//Find the divider path
-	var dividerPagePath = "dividers." + getDivider() + ".pages"
-
-	chrome.storage.local.get(dividerPagePath, pageItems => {
-		//Remove pages with matching urls
-		const pages = pageItems[dividerPagePath].filter(dividerPage => {
-			return dividerPage.url !== page.url
-		})
-
-		//Update
-		chrome.storage.local.set({[dividerPagePath]: pages})
-	})
+	return decodeURIComponent(location.hash).substring(1)
 }
 
 function createPageElement(page) {
@@ -31,16 +18,12 @@ function createPageElement(page) {
 	button.title = "Expand " + page.title
 
 	button.addEventListener("click", () => {
-		chrome.tabs.getCurrent(tab => {
-			//Open url in a new tab next to the same tab
-			chrome.tabs.create({
-				"url": page.url,
-				"active": false,
-				"index": tab.index + 1
-			})
-
-			decompress(page)
-		})
+		//Open url in a new tab next to the same tab
+		DividerUtils.expand(
+			getDivider(),
+			Array.from(document.getElementById("items").children).indexOf(button.parentNode.parentNode),
+			false
+		)
 	})
 
 	//Add link
@@ -57,91 +40,92 @@ function createPageElement(page) {
 	return div
 }
 
-//Get the divider and its page path
-var divider = getDivider()
-var dividerPagePath = "dividers." + divider + ".pages"
+function reloadItems() {
+	var dividerPagePath = "dividers." + getDivider() + ".pages"
 
-//Set the names to the divider name
-document.getElementById("title").innerText = "(" + divider + ") | Divider"
-document.getElementById("name").innerText = divider
+	//Get the items
+	var items = document.getElementById("items")
 
-//Populate the urls in the divider
-chrome.storage.local.get(dividerPagePath, pageItems => {
-	//Get all the stored pages for the divider and place them in it
-	pageItems[dividerPagePath].forEach(page => {
-		document.getElementById("items").appendChild(createPageElement(page))
+	//Remove all the children
+	while(items.lastChild)
+		items.removeChild(items.lastChild)
+
+	//Populate the urls in the divider
+	chrome.storage.local.get(dividerPagePath, pageItems => {
+		//Get all the stored pages for the divider and place them in it
+		const pages = pageItems[dividerPagePath]
+
+		if(pages) {
+			pages.forEach(page => {
+				items.appendChild(createPageElement(page))
+			})
+		}
 	})
-})
+}
 
+function init() {
+	var divider = getDivider()
+
+	//Set the names to the divider name
+	document.getElementById("title").innerText = "(" + divider + ") | Divider"
+	document.getElementById("name").innerText = divider
+
+	reloadItems()
+}
+
+init()
 
 //Update the view in case it is changed somewhere
 chrome.storage.onChanged.addListener((changes, areaName) => {
-	var dividerPagePath = "dividers." + getDivider() + ".pages"
+	var dividerName = getDivider()
+	var dividerPagePath = "dividers." + dividerName + ".pages"
 
-	//Check if this page was changed
+	//Check if name was changed
+	if(changes.hasOwnProperty("dividers")) {
+		console.log("Values:")
+		console.log(changes)
+
+		var oldValue = changes["dividers"].oldValue
+		var newValue = changes["dividers"].newValue
+
+		if(oldValue.length == newValue.length) { //A rename or reorder occured
+			if(!newValue.includes(dividerName)) {//This divider was renamed
+				for(var i = 0; i < newValue.length; i++) {
+					var oldName = oldValue[i]
+					var newName = newValue[i]
+
+					if(oldName != newName && oldName == dividerName) {
+						location.hash = newName
+						init()
+					}
+				}
+			}
+		} else { //A removal or addition occured
+			if(!newValue.includes(dividerName)) {//This divider was removed
+				window.close()
+			}
+		}
+	}
+
+	//Check if this pages on the divider were changed
 	if(changes.hasOwnProperty(dividerPagePath)) {
-		var items = document.getElementById("items")
-
-		//Remove all the children
-		while(items.lastChild)
-			items.removeChild(items.lastChild)
-
-		//Add the new titles
-		changes[dividerPagePath].newValue.forEach(page => {
-			document.getElementById("items").appendChild(createPageElement(page))
-		})
+		reloadItems()
 	}
 })
 
 document.getElementById("compressRight").addEventListener("click", () => {
-	//Get the page path
-	var dividerPagePath = "dividers." + getDivider() + ".pages"
-
-	chrome.storage.local.get(dividerPagePath, items => { //Get the object for the page path
-		chrome.tabs.getCurrent(dividerTab => { //Get the current tab
-			chrome.tabs.query( //Get all the tabs in the same window
-				{
-					"currentWindow": true,
-					"pinned": false
-				},
-				tabs => {
-					//Get the actual pages object
-					var pages = items[dividerPagePath]
-
-					tabs.forEach(tab => {
-						//Compress if index is to the right
-						if(tab.index > dividerTab.index) {
-							pages.push({
-								"title": tab.title,
-								"url": tab.url,
-								"time": new Date().getTime()
-							})
-
-							//Remove the tab
-							chrome.tabs.remove(tab.id)
-						}
-					})
-
-					//Update with new pages
-					chrome.storage.local.set({[dividerPagePath]: pages})
-				}
-			)
-		})
-	})
+	DividerUtils.compressAll(getDivider(), (dividerTab, tab) => tab.index > dividerTab.index)
 })
 
 document.getElementById("expandRight").addEventListener("click", () => {
-	var dividerPagePath = "dividers." + getDivider() + ".pages"
+	var orderedIndices = []
 
-	chrome.storage.local.get(dividerPagePath, pageItems => {
-		pageItems[dividerPagePath].forEach(page => {
-			chrome.tabs.create({
-				"url": page.url,
-				"active": false
-			})
-		})
+	for(var i = document.getElementById("items").childNodes.length - 1; i >= 0; i--)
+		orderedIndices.push(i)
 
-		//Update
-		chrome.storage.local.set({[dividerPagePath]: []})
-	})
+	DividerUtils.expandAll(getDivider(), orderedIndices)
+})
+
+document.getElementById("deleteDivider").addEventListener("click", () => {
+	DividerUtils.remove(getDivider())
 })

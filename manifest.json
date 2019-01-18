@@ -2,6 +2,7 @@
 	"name": "Tabs+",
 	"version": "0.1.0",
 	"description": "Extends Chrome's tab management capabilities",
+	"incognito": "split",
 	"permissions": [
 		"activeTab",
 		"contextMenus",
@@ -9,10 +10,11 @@
 		"tabs"
 	],
 	"web_accessible_resources": [
+		"DividerUtils.js",
 		"divider*"
 	],
 	"background": {
-		"scripts": ["tabs.js"],
+		"page": "tabs.html",
 		"presistent": false
 	},
 	"browser_action": {
