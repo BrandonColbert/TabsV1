@@ -29,10 +29,13 @@ b {
 
 hr {
 	border-top: 1px solid black;
+	display: block;
+	margin-bottom: 0px;
 }
 
-details {
-	margin-top: 12px;
+.dividerSpan {
+	padding-top: 12px;
+	display: block;
 }
 
 details > summary {
@@ -56,7 +59,12 @@ details > summary::-webkit-details-marker {
 	display: none;
 }
 
-details > button {
+details > span {
+	padding-top: 12px;
+	display: inline-block;
+}
+
+details > span > button {
 	cursor: pointer;
 	background: none;
 	border: none;
@@ -66,7 +74,6 @@ details > button {
 	word-wrap: inherit;
 
 	display: block;
-	margin-top: 12px;
 
 	margin-left: 20px;
 	font-size: 14px;
@@ -75,7 +82,7 @@ details > button {
 }
 
 :hover {
-	color: black !important;
+	color: black;
 }
 
 .pageButton {
@@ -98,4 +105,33 @@ details > button {
 
 .pageButton:hover {
 	background-color: lightslategray;
+}
+
+#addSymbol {
+	/*Text*/
+	font: inherit;
+	text-align: center;
+	font-size: 24px;
+	font-family: "Courier New", Courier, monospace;
+
+	/*Position*/
+	position: absolute;
+	left: 80%;
+
+	/*Appearance*/
+	cursor: pointer;
+	border: none;
+	outline: none;
+	border-radius: 20%;
+
+	/*Color*/
+	background: none;
+	color: darkgray;
+	transition-duration: 0.4s;
+	background-color: transparent;
+}
+
+#addSymbol:hover {
+	color: lightslategray;
+	background-color: gainsboro;
 }

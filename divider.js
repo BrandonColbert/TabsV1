@@ -4,13 +4,17 @@ function getDivider() {
 	return decodeURIComponent(location.hash).substring(1)
 }
 
+function getButtonIndex(button) {
+	return Array.from(document.getElementById("items").children).indexOf(button.parentNode.parentNode)
+}
+
 function createPageElement(page) {
 	//Create divider and text
 	var div = document.createElement("div")
 	div.classList.add("page")
 
 	//Add title
-	var title = document.createElement("p")
+	var title = document.createElement("span")
 
 	//Add expand button
 	var button = document.createElement("button")
@@ -21,7 +25,7 @@ function createPageElement(page) {
 		//Open url in a new tab next to the same tab
 		DividerUtils.expand(
 			getDivider(),
-			Array.from(document.getElementById("items").children).indexOf(button.parentNode.parentNode),
+			getButtonIndex(button),
 			false
 		)
 	})
@@ -36,6 +40,39 @@ function createPageElement(page) {
 	title.appendChild(document.createTextNode(page.title))
 	title.appendChild(link)
 	div.appendChild(title)
+
+	//Make draggable
+	button.draggable = true
+
+	button.addEventListener("dragstart", event => {
+		event.dataTransfer.effectAllowed = "move"
+		event.dataTransfer.setData("divider_page_index", getButtonIndex(button))
+	})
+
+	button.addEventListener("drop", event => {
+		event.stopPropagation()
+		var dividerPageIndex = event.dataTransfer.getData("divider_page_index")
+
+		if(dividerPageIndex) {
+			var dragIndex = parseInt(dividerPageIndex)
+			var dropIndex = getButtonIndex(button)
+
+			DividerUtils.reorderPage(getDivider(), dragIndex, dropIndex < dragIndex ? dropIndex : (dropIndex + 1))
+		}
+	})
+
+	div.addEventListener("dragover", event => {
+		event.preventDefault()
+		event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes("divider_page_index") ? "move" : "none"
+	})
+
+	div.addEventListener("drop", event => {
+		event.stopPropagation()
+		var dividerPageIndex = event.dataTransfer.getData("divider_page_index")
+
+		if(dividerPageIndex)
+			DividerUtils.reorderPage(getDivider(), parseInt(dividerPageIndex), getButtonIndex(button))
+	})
 
 	return div
 }
@@ -63,55 +100,13 @@ function reloadItems() {
 	})
 }
 
-function init() {
+function refreshName() {
 	var divider = getDivider()
 
 	//Set the names to the divider name
 	document.getElementById("title").innerText = "(" + divider + ") | Divider"
 	document.getElementById("name").innerText = divider
-
-	reloadItems()
 }
-
-init()
-
-//Update the view in case it is changed somewhere
-chrome.storage.onChanged.addListener((changes, areaName) => {
-	var dividerName = getDivider()
-	var dividerPagePath = "dividers." + dividerName + ".pages"
-
-	//Check if name was changed
-	if(changes.hasOwnProperty("dividers")) {
-		console.log("Values:")
-		console.log(changes)
-
-		var oldValue = changes["dividers"].oldValue
-		var newValue = changes["dividers"].newValue
-
-		if(oldValue.length == newValue.length) { //A rename or reorder occured
-			if(!newValue.includes(dividerName)) {//This divider was renamed
-				for(var i = 0; i < newValue.length; i++) {
-					var oldName = oldValue[i]
-					var newName = newValue[i]
-
-					if(oldName != newName && oldName == dividerName) {
-						location.hash = newName
-						init()
-					}
-				}
-			}
-		} else { //A removal or addition occured
-			if(!newValue.includes(dividerName)) {//This divider was removed
-				window.close()
-			}
-		}
-	}
-
-	//Check if this pages on the divider were changed
-	if(changes.hasOwnProperty(dividerPagePath)) {
-		reloadItems()
-	}
-})
 
 document.getElementById("compressRight").addEventListener("click", () => {
 	DividerUtils.compressAll(getDivider(), (dividerTab, tab) => tab.index > dividerTab.index)
@@ -129,3 +124,53 @@ document.getElementById("expandRight").addEventListener("click", () => {
 document.getElementById("deleteDivider").addEventListener("click", () => {
 	DividerUtils.remove(getDivider())
 })
+
+document.getElementById("exportSave").addEventListener("click", () => {
+	DividerUtils.exportAll()
+})
+
+function onMessage(message, sender, sendResponse) {
+	switch(message.event) {
+		case "dividerBatchExpand":
+			var items = document.getElementById("items").children
+			message.orderedIndices.forEach(index => items[index].remove())
+			break
+		case "dividerBatchCompress":
+			if(message.divider == getDivider()) {
+				var items = document.getElementById("items")
+				message.pages.forEach(page => items.appendChild(createPageElement(page)))
+			}
+			break
+		case "dividerExpand":
+			if(message.divider == getDivider())
+				document.getElementById("items").children[message.pageIndex].remove()
+			break
+		case "dividerCompress":
+			if(message.divider == getDivider())
+				document.getElementById("items").appendChild(createPageElement(message.page))
+			break
+		case "dividerRename":
+			if(message.oldName == getDivider()) {
+				location.hash = message.newName
+				refreshName()
+			}
+			break
+		case "dividerRemove":
+			if(message.name == getDivider())
+				window.close()
+			break
+		case "pageReorder":
+			if(message.divider == getDivider()) {
+				var items = document.getElementById("items")
+				items.insertBefore(items.children[message.oldIndex], items.children[message.newIndex])
+			}
+		default:
+			break
+	}
+}
+
+refreshName()
+reloadItems()
+
+DividerUtils.onMessageSelf(onMessage)
+chrome.runtime.onMessage.addListener(onMessage)

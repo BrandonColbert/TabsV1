@@ -33,36 +33,42 @@ function createContextMenus() {
 	})
 }
 
+function onMessage(message, sender, sendResponse) {
+	switch(message.event) {
+		case "dividerRename": case "dividerRemove": case "dividerAdd": case "dividerReorder":
+			chrome.contextMenus.removeAll(() => createContextMenus())
+			break
+		default:
+			break
+	}
+}
+
 function init() {
 	createContextMenus()
 
-	//Recreate context menu everytime dividers is changed
-	chrome.storage.onChanged.addListener((changes, areaName) => {
-		if(changes.hasOwnProperty("dividers"))
-			chrome.contextMenus.removeAll(() => createContextMenus())
-	})
+	DividerUtils.onMessageSelf(onMessage)
+	chrome.runtime.onMessage.addListener(onMessage)
 }
 
-//init()
-
-//DEBUG START
-var reset = true
-
-if(reset) {
-	chrome.storage.local.clear()
-
-	fetch(chrome.runtime.getURL("Example.json")).then(response => response.json()).then(json => {
-		chrome.storage.local.set(json)
-
-		chrome.storage.local.get(null, items => {
-			console.log(items)
-			init()
+chrome.storage.local.get(null, items => {
+	if(items["dividers"]) {
+		init()
+	} else {
+		fetch(chrome.runtime.getURL("initial_config.json")).then(response => response.json()).then(json => {
+			chrome.storage.local.set(json, () => init())
 		})
-	})
-} else {
+	}
+})
+
+/*
+chrome.storage.local.clear()
+
+fetch(chrome.runtime.getURL("Example.json")).then(response => response.json()).then(json => {
+	chrome.storage.local.set(json)
+
 	chrome.storage.local.get(null, items => {
 		console.log(items)
 		init()
 	})
-}
-//DEBUG END
+})
+*/

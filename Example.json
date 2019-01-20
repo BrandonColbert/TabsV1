@@ -39,6 +39,21 @@
 			"title": "user/Vsauce",
 			"url": "https://www.youtube.com/user/Vsauce/videos",
 			"time": 0
+		},
+		{
+			"title": "user/Brackeys",
+			"url": "https://www.youtube.com/user/Brackeys/videos",
+			"time": 0
+		},
+		{
+			"title": "user/UnboxTherapy",
+			"url": "https://www.youtube.com/user/UnboxTherapy/videos",
+			"time": 0
+		},
+		{
+			"title": "user/GameTheory",
+			"url": "https://www.youtube.com/user/GameTheory/videos",
+			"time": 0
 		}
 	],
 	"dividers.Reddit.options": [],

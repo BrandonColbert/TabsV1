@@ -8,7 +8,7 @@
 	color: rgb(20, 20, 20);
 }
 
-p {
+span {
 	font-size: 18px;
 	color: darkslategray;
 	outline: none;
@@ -21,7 +21,7 @@ a {
 }
 
 .page {
-	margin-top: 20px;
+	padding-top: 20px;
 }
 
 .pageButton {

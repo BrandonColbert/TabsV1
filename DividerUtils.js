@@ -1,3 +1,16 @@
+var funcOnMessageSelf = null
+
+export function onMessageSelf(func) {
+	funcOnMessageSelf = func
+}
+
+function sendMessage(message) {
+	if(funcOnMessageSelf)
+		funcOnMessageSelf(message)
+
+	chrome.runtime.sendMessage(message)
+}
+
 export function open(name, redirect) {
 	var url = "divider.html#" + name
 
@@ -23,12 +36,13 @@ export function compressAll(divider, predicate) {
 				tabs => {
 					//Get the actual pages object
 					var pages = items[dividerPagePath]
+					var additionalPages = []
 
 					tabs.forEach(tab => {
 						//Compress if index is to the right
 						if(predicate(dividerTab, tab)) {
-							pages.push({
-								"title": tab.title,
+							additionalPages.push({
+								"title": tab.title.length == 0 ? "[Unknown]" : tab.title,
 								"url": tab.url,
 								"time": new Date().getTime()
 							})
@@ -38,8 +52,14 @@ export function compressAll(divider, predicate) {
 						}
 					})
 
+					sendMessage({
+						"event": "dividerBatchCompress",
+						"divider": divider,
+						"pages": additionalPages
+					})
+
 					//Update with new pages
-					chrome.storage.local.set({[dividerPagePath]: pages})
+					chrome.storage.local.set({[dividerPagePath]: pages.concat(additionalPages)})
 				}
 			)
 		})
@@ -57,11 +77,19 @@ export function compress(divider, tabId) {
 		chrome.storage.local.get(dividerPagePath, items => {
 			var pages = items[dividerPagePath]
 
-			//Add the page to the array
-			pages.push({
-				"title": tab.title,
+			var page = {
+				"title": tab.title.length == 0 ? "[Unknown]" : tab.title,
 				"url": tab.url,
 				"time": new Date().getTime()
+			}
+
+			//Add the page to the array
+			pages.push(page)
+
+			sendMessage({
+				"event": "dividerCompress",
+				"divider": divider,
+				"page": page
 			})
 
 			//Update storage accordingly
@@ -72,6 +100,12 @@ export function compress(divider, tabId) {
 
 //Expands each page at the index to the directly to the right of the divider tab in the corresponding order
 export function expandAll(divider, orderedIndices) {
+	sendMessage({
+		"event": "dividerBatchExpand",
+		"divider": divider,
+		"orderedIndices": orderedIndices
+	})
+
 	var dividerPagePath = "dividers." + divider + ".pages"
 
 	chrome.storage.local.get(dividerPagePath, pageItems => {
@@ -104,6 +138,12 @@ export function expandAll(divider, orderedIndices) {
 }
 
 export function expand(divider, pageIndex, redirect) {
+	sendMessage({
+		"event": "dividerExpand",
+		"divider": divider,
+		"pageIndex": pageIndex
+	})
+
 	//Find the divider path
 	var dividerPagePath = "dividers." + divider + ".pages"
 
@@ -145,6 +185,12 @@ export function rename(oldName, newName, callback) {
 			} else {
 				callback(true)
 
+				sendMessage({
+					"event": "dividerRename",
+					"oldName": oldName,
+					"newName": newName
+				})
+
 				var dividers = []
 
 				oldDividers.forEach(element => {
@@ -184,8 +230,6 @@ export function rename(oldName, newName, callback) {
 }
 
 export function remove(name) {
-	console.log("Deleted " + name)
-
 	chrome.storage.local.get("dividers", items => {
 		var dividers = items.dividers
 		var index = dividers.indexOf(name)
@@ -196,17 +240,101 @@ export function remove(name) {
 			dividers.splice(index, 1)
 
 			//Update dividers
-			chrome.storage.local.set({"dividers": dividers})
-
-			//Remove pages and options
-			chrome.storage.local.remove([
-				"dividers." + name + ".pages",
-				"dividers." + name + ".options"
-			])
+			chrome.storage.local.set({"dividers": dividers}, () => {
+				//Remove pages and options
+				chrome.storage.local.remove([
+					"dividers." + name + ".pages",
+					"dividers." + name + ".options"
+				], () => {
+					//Send message
+					sendMessage({
+						"event": "dividerRemove",
+						"name": name
+					})
+				})
+			})
 		}
 	})
 }
 
-export function add(name) {
+export function add() {
+	chrome.storage.local.get("dividers", items => {
+		var dividers = items.dividers
 
+		var name = ""
+		var baseName = "New Divider "
+		var index = 1
+
+		//Check if divider already exists and increase index if it does
+		while(dividers.indexOf(name = baseName + index) != -1) index++
+
+		dividers.push(name)
+		
+		//Update dividers
+		chrome.storage.local.set(
+			{
+				"dividers": dividers,
+				["dividers." + name + ".pages"]: [],
+				["dividers." + name + ".options"]: []
+			}, () => {
+				sendMessage({
+					"event": "dividerAdd",
+					"name": name
+				})
+			}
+		)
+	})
+}
+
+//Changes the order of a divider
+export function reorder(oldIndex, newIndex) {
+	if(oldIndex != newIndex) {
+		sendMessage({
+			"event": "dividerReorder",
+			"oldIndex": oldIndex,
+			"newIndex": newIndex
+		})
+
+		chrome.storage.local.get("dividers", items => {
+			var dividers = items.dividers;
+
+			dividers.splice(newIndex, 0, dividers[oldIndex]) //Insert the divider into the new index
+			dividers.splice(newIndex < oldIndex ? (oldIndex + 1) : oldIndex, 1) //Remove it from the old index
+
+			chrome.storage.local.set({"dividers": dividers})
+		})
+	}
+}
+
+//Changes the order of a page on a divider
+export function reorderPage(divider, oldIndex, newIndex) {
+	if(oldIndex != newIndex) { //Ensure the old and new indices are different
+		sendMessage({
+			"event": "pageReorder",
+			"divider": divider,
+			"oldIndex": oldIndex,
+			"newIndex": newIndex
+		})
+
+		var dividerPagePath = "dividers." + divider + ".pages"
+
+		chrome.storage.local.get(dividerPagePath, pageItems => {
+			var pages = pageItems[dividerPagePath]
+			pages.splice(newIndex, 0, pages[oldIndex]) //Insert the page into the new index
+			pages.splice(newIndex < oldIndex ? (oldIndex + 1) : oldIndex, 1) //Remove it from the old index
+
+			chrome.storage.local.set({[dividerPagePath]: pages}) //Update the page
+		})
+	}
+}
+
+export function exportAll() {
+	chrome.storage.local.get(null, items => {
+		var data = JSON.stringify(items, null, "\t")
+
+		var link = document.createElement("a")
+		link.href = URL.createObjectURL(new Blob([data], {type: "text/json"}))
+		link.download = "tabs_config.json"
+		link.click()
+	})
 }
