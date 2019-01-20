@@ -108,20 +108,26 @@ function createDivider(name) {
 	})
 
 	dividerName.addEventListener("keydown", event => {
-		if(event.code == "Escape") { //Escape to leave text as original
-			//Prevent exiting extension
-			event.preventDefault()
-			
-			dividerName.contentEditable = false
-			dividerName.textContent = dividerName.dataset.original
-		} else if(event.code == "Enter") { //Enter to rename
-			dividerName.contentEditable = false
+		if(dividerName.contentEditable == "true") {
+			if(event.code == "Escape") { //Escape to leave text as original
+				//Prevent exiting extension
+				event.preventDefault()
+				
+				dividerName.contentEditable = false
+				dividerName.textContent = dividerName.dataset.original
+			} else if(event.code == "Enter") { //Enter to rename
+				dividerName.contentEditable = false
 
-			//Try renaming and revert name if callback result is false
-			DividerUtils.rename(dividerName.dataset.original, dividerName.textContent, result => {
-				if(!result)
-					dividerName.textContent = dividerName.dataset.original
-			})
+				//Try renaming and revert name if callback result is false
+				DividerUtils.rename(dividerName.dataset.original, dividerName.textContent, result => {
+					if(!result)
+						dividerName.textContent = dividerName.dataset.original
+				})
+			} else if(event.code == "Space") {
+				event.preventDefault()
+				dividerName.innerHTML += "&nbsp;"
+				window.getSelection().collapse(dividerName.childNodes[0], dividerName.textContent.length);
+			}
 		}
 	})
 
