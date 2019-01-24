@@ -15,13 +15,23 @@ span {
 	text-decoration: none;
 }
 
-a {
+span > a {
 	margin-left: 0.5em;
 	font-size: 14px;
+	color: transparent;
+}
+
+span:hover > a {
+	color: blue;
+}
+
+span > a:hover {
+	color: blue;
 }
 
 .page {
 	padding-top: 20px;
+	white-space: nowrap;
 }
 
 .pageButton {
@@ -62,16 +72,32 @@ a {
 
 .grid {
 	display: grid;
-	grid-gap: 10px;
+	grid-gap: 25px;
 	padding: 10px;
-	grid-template-columns: repeat(2, 1fr);
-	grid-template-rows: repeat(2, 1fr);
+	grid-template-columns: 150px auto;
+	grid-template-rows: 50px auto;
+	grid-template-areas: "name search"
+						 "commands pages";
+
 }
 
-#gc1 {}
+#gc1 {
+	grid-area: name;
+	justify-self: center;
+	align-self: end;
+}
 
-#gc2 {}
+#gc2 {
+	grid-area: search;
+	justify-self: start;
+	align-self: end;
+}
 
-#gc3 {}
+#gc3 {
+	grid-area: commands;
+	justify-self: center;
+}
 
-#gc4 {}
+#gc4 {
+	grid-area: pages;
+}

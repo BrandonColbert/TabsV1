@@ -346,7 +346,7 @@ export function exportURLs(divider) {
 		var data = ""
 
 		items[pagePath].forEach(page => {
-			data = data.concat(page.title + ": " + page.url + "\r\n")
+			data = data.concat(page.title + ": " + page.url + "\r\n\r\n")
 		})
 
 		var link = document.createElement("a")
