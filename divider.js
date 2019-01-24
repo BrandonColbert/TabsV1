@@ -129,6 +129,14 @@ document.getElementById("exportSave").addEventListener("click", () => {
 	DividerUtils.exportAll()
 })
 
+document.getElementById("compressLeft").addEventListener("click", () => {
+	DividerUtils.compressAll(getDivider(), (dividerTab, tab) => tab.index < dividerTab.index)
+})
+
+document.getElementById("exportURLs").addEventListener("click", () => {
+	DividerUtils.exportURLs(getDivider())
+})
+
 function onMessage(message, sender, sendResponse) {
 	switch(message.event) {
 		case "dividerBatchExpand":

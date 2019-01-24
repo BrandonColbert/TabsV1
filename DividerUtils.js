@@ -24,7 +24,7 @@ export function open(name, redirect) {
 //Compress all objects into the divider that return true for their predicate involving the divider's current tab and the tab in question
 export function compressAll(divider, predicate) {
 	//Get the page path
-	var dividerPagePath = "dividers." + divider + ".pages"
+	var dividerPagePath = getPagePath(divider)
 
 	chrome.storage.local.get(dividerPagePath, items => { //Get the object for the page path
 		chrome.tabs.getCurrent(dividerTab => { //Get the current tab
@@ -72,7 +72,7 @@ export function compress(divider, tabId) {
 		chrome.tabs.remove(tab.id)
 
 		//Get the path for the divider
-		var dividerPagePath = "dividers." + divider + ".pages"
+		var dividerPagePath = getPagePath(divider)
 
 		chrome.storage.local.get(dividerPagePath, items => {
 			var pages = items[dividerPagePath]
@@ -106,7 +106,7 @@ export function expandAll(divider, orderedIndices) {
 		"orderedIndices": orderedIndices
 	})
 
-	var dividerPagePath = "dividers." + divider + ".pages"
+	var dividerPagePath = getPagePath(divider)
 
 	chrome.storage.local.get(dividerPagePath, pageItems => {
 		const oldPages = pageItems[dividerPagePath]
@@ -145,7 +145,7 @@ export function expand(divider, pageIndex, redirect) {
 	})
 
 	//Find the divider path
-	var dividerPagePath = "dividers." + divider + ".pages"
+	var dividerPagePath = getPagePath(divider)
 
 	chrome.storage.local.get(dividerPagePath, pageItems => {
 		//Remove from pages by index
@@ -316,7 +316,7 @@ export function reorderPage(divider, oldIndex, newIndex) {
 			"newIndex": newIndex
 		})
 
-		var dividerPagePath = "dividers." + divider + ".pages"
+		var dividerPagePath = getPagePath(divider)
 
 		chrome.storage.local.get(dividerPagePath, pageItems => {
 			var pages = pageItems[dividerPagePath]
@@ -334,7 +334,32 @@ export function exportAll() {
 
 		var link = document.createElement("a")
 		link.href = URL.createObjectURL(new Blob([data], {type: "text/json"}))
-		link.download = "tabs_config.json"
+		link.download = "Tabs Config.json"
 		link.click()
 	})
+}
+
+export function exportURLs(divider) {
+	const pagePath = getPagePath(divider)
+
+	chrome.storage.local.get(pagePath, items => {
+		var data = ""
+
+		items[pagePath].forEach(page => {
+			data = data.concat(page.title + ": " + page.url + "\r\n")
+		})
+
+		var link = document.createElement("a")
+		link.href = URL.createObjectURL(new Blob([data], {type: "text"}))
+		link.download = divider + ".txt"
+		link.click()
+	})
+}
+
+export function getPagePath(divider) {
+	return "dividers." + divider + ".pages"
+}
+
+export function getOptionPath(divider) {
+	return "dividers" + divider + ".options"
 }

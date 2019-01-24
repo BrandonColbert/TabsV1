@@ -5,25 +5,26 @@
 		<title id="title"></title>
 	</head>
 	<body>
-		<b id="name"></b>
-		<br></br>
-		<br></br>
-		<div>
-			<b class="subsection">Options</b>
-			<br></br>
-			<br></br>
-		</div>
-		<div>
-			<b class="subsection">Commands</b>
-			<br><button class="commandButton" id="compressRight">Compress all right</button></br>
-			<br><button class="commandButton" id="expandRight">Expand all to right</button></br>
-			<br><button class="commandButton" id="deleteDivider">Delete divider</button></br>
-			<br><button class="commandButton" id="exportSave">Export save</button></br>
-		</div>
-		<br></br>
-		<div>
-			<b class="subsection">Pages</b>
-			<div id="items"></div>
+		<div class="grid">
+			<div id="gc1">
+				<b id="name"></b>
+			</div>
+			<div id="gc2">
+				<b class="subsection">Options</b>
+			</div>
+			<div id="gc3">
+				<b class="subsection">Commands</b>
+				<br><button class="commandButton" id="compressRight">Compress all right</button></br>
+				<br><button class="commandButton" id="compressLeft">Compress all left</button></br>
+				<br><button class="commandButton" id="expandRight">Expand all to right</button></br>
+				<br><button class="commandButton" id="deleteDivider">Delete divider</button></br>
+				<br><button class="commandButton" id="exportSave">Export save</button></br>
+				<br><button class="commandButton" id="exportURLs">Export URLs</button></br>
+			</div>
+			<div id="gc4">
+				<b class="subsection">Pages</b>
+				<div id="items"></div>
+			</div>
 		</div>
 	</body>
 	<script type="module" src="divider.js"></script>
