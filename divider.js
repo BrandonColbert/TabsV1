@@ -15,6 +15,7 @@ function createPageElement(page) {
 
 	//Add title
 	var title = document.createElement("span")
+	title.classList.add("pageSpan")
 
 	//Add expand button
 	var button = document.createElement("button")
@@ -35,21 +36,37 @@ function createPageElement(page) {
 	link.href = page.url
 	link.appendChild(document.createTextNode("<" + page.url + ">"))
 
+	//Spacer
+	var spacer = document.createElement("span")
+	spacer.classList.add("pageSpacer")
+
 	//Show correctly
 	title.appendChild(button)
 	title.appendChild(document.createTextNode(page.title))
 	title.appendChild(link)
 	div.appendChild(title)
+	div.appendChild(spacer)
 
 	//Make draggable
 	button.draggable = true
 
 	button.addEventListener("dragstart", event => {
+		title.classList.add("dragSource")
 		event.dataTransfer.effectAllowed = "move"
 		event.dataTransfer.setData("divider_page_index", getButtonIndex(button))
 	})
 
-	button.addEventListener("drop", event => {
+	button.addEventListener("dragend", event => {
+		title.classList.remove("dragSource")
+		document.querySelectorAll(".dragTarget").forEach(element => element.classList.remove("dragTarget"))
+	})
+
+	title.addEventListener("dragover", event => {
+		event.preventDefault()
+		event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes("divider_page_index") ? "move" : "none"
+	})
+
+	title.addEventListener("drop", event => {
 		event.stopPropagation()
 		var dividerPageIndex = event.dataTransfer.getData("divider_page_index")
 
@@ -61,17 +78,30 @@ function createPageElement(page) {
 		}
 	})
 
-	div.addEventListener("dragover", event => {
+	spacer.addEventListener("dragover", event => {
 		event.preventDefault()
 		event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes("divider_page_index") ? "move" : "none"
 	})
 
-	div.addEventListener("drop", event => {
+	spacer.addEventListener("drop", event => {
 		event.stopPropagation()
 		var dividerPageIndex = event.dataTransfer.getData("divider_page_index")
 
-		if(dividerPageIndex)
-			DividerUtils.reorderPage(getDivider(), parseInt(dividerPageIndex), getButtonIndex(button))
+		if(dividerPageIndex) {
+			var dragIndex = parseInt(dividerPageIndex)
+			var dropIndex = getButtonIndex(button)
+
+			DividerUtils.reorderPage(getDivider(), dragIndex, dropIndex + 1)
+		}
+	})
+
+	//Handle highlighting drop location
+	spacer.addEventListener("dragenter", event => spacer.classList.add("dragTarget"))
+	spacer.addEventListener("dragleave", event => spacer.classList.remove("dragTarget"))
+	title.addEventListener("dragenter", event => title.classList.add("dragTarget"))
+	title.addEventListener("dragleave", event => {
+		if(event.fromElement != button && event.fromElement != title)
+			title.classList.remove("dragTarget")
 	})
 
 	return div

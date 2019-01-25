@@ -1,14 +1,34 @@
 #name {
-	font-size: 32px;
 	color: black;
+	font-size: 32px;
+	white-space: nowrap;
 }
 
-.subsection {
-	font-size: 24px;
+#searchbar {
+	font-size: 20px;
 	color: rgb(20, 20, 20);
 }
 
-span {
+.dragSource {
+	border: 2px solid lightblue;
+}
+
+.dragTarget {
+	border: 1px solid silver;
+}
+
+.page {
+	padding: 0px;
+	white-space: nowrap;
+}
+
+.pageSpacer {
+	display: block;
+	height: 20px;
+	width: 100%;
+}
+
+.pageSpan {
 	font-size: 18px;
 	color: darkslategray;
 	outline: none;
@@ -27,11 +47,6 @@ span:hover > a {
 
 span > a:hover {
 	color: blue;
-}
-
-.page {
-	padding-top: 20px;
-	white-space: nowrap;
 }
 
 .pageButton {
@@ -73,18 +88,19 @@ span > a:hover {
 .grid {
 	display: grid;
 	grid-gap: 25px;
-	padding: 10px;
+	padding-left: 10px;
 	grid-template-columns: 150px auto;
-	grid-template-rows: 50px auto;
-	grid-template-areas: "name search"
+	grid-template-rows: auto 50px;
+	grid-template-areas: "name name"
+						 ". search"
 						 "commands pages";
 
 }
 
 #gc1 {
 	grid-area: name;
-	justify-self: center;
 	align-self: end;
+	justify-self: start;
 }
 
 #gc2 {
