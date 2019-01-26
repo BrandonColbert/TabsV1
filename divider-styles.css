@@ -1,7 +1,9 @@
-#name {
+select {
 	color: black;
 	font-size: 32px;
 	white-space: nowrap;
+	border: 0px;
+	outline: none;
 }
 
 #searchbar {
