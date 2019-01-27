@@ -266,13 +266,16 @@ document.getElementById("searchbar").addEventListener("keydown", event => {
 function onMessage(message, sender, sendResponse) {
 	switch(message.event) {
 		case "dividerBatchExpand":
-			var items = document.getElementById("items").children
-			message.orderedIndices.forEach(index => items[index].remove())
+			if(message.divider == getDivider()) {
+				var items = document.getElementById("items").children
+				message.orderedIndices.forEach(index => items[index].remove())
+			}
 			break
 		case "dividerBatchCompress":
 			if(message.divider == getDivider()) {
 				var items = document.getElementById("items")
 				message.pages.forEach(page => items.appendChild(createPageElement(page)))
+				checkSearch()
 			}
 			break
 		case "dividerExpand":
@@ -280,17 +283,22 @@ function onMessage(message, sender, sendResponse) {
 				document.getElementById("items").children[message.pageIndex].remove()
 			break
 		case "dividerCompress":
-			if(message.divider == getDivider())
+			if(message.divider == getDivider()) {
 				document.getElementById("items").appendChild(createPageElement(message.page))
+				checkSearch()
+			}
 			break
 		case "dividerRename":
-			if(message.oldName == getDivider()) {
+			if(message.oldName == getDivider())
 				setDivider(message.newName)
-			}
+
+			reloadDividerDropdown()
 			break
 		case "dividerRemove":
 			if(message.name == getDivider())
 				window.close()
+			else
+				reloadDividerDropdown()
 			break
 		case "pageReorder":
 			if(message.divider == getDivider()) {
@@ -298,13 +306,15 @@ function onMessage(message, sender, sendResponse) {
 				items.insertBefore(items.children[message.oldIndex], items.children[message.newIndex])
 			}
 			break
+		case "dividerAdd":
+			reloadDividerDropdown()
+			break
+		case "dividerReorder":
+			reloadDividerDropdown()
+			break
 		default:
 			break
 	}
-
-	if(message.event == "dividerAdd" || message.event ==  "dividerRemove" ||
-	   message.event == "dividerRename" || message.event == "dividerReorder")
-		reloadDividerDropdown()
 }
 
 refreshName()
