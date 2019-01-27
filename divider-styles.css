@@ -1,14 +1,26 @@
-select {
+#dropdown {
+	-webkit-appearance: none;
+
 	color: black;
-	font-size: 32px;
+	font-size: 24px;
 	white-space: nowrap;
+
 	border: 0px;
+	border-style: ridge;
 	outline: none;
+	background-color: snow;
 }
 
 #searchbar {
 	font-size: 20px;
 	color: rgb(20, 20, 20);
+
+	height: 24px;
+	width: 200%;
+
+	resize: none;
+	white-space: nowrap;
+	overflow-x: hidden;
 }
 
 .dragSource {

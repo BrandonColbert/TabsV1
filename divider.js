@@ -4,6 +4,11 @@ function getDivider() {
 	return decodeURIComponent(location.hash).substring(1)
 }
 
+function setDivider(name) {
+	location.hash = name
+	refreshName()
+}
+
 function getButtonIndex(button) {
 	return Array.from(document.getElementById("items").children).indexOf(button.parentNode.parentNode)
 }
@@ -122,11 +127,10 @@ function reloadItems() {
 		//Get all the stored pages for the divider and place them in it
 		const pages = pageItems[dividerPagePath]
 
-		if(pages) {
-			pages.forEach(page => {
-				items.appendChild(createPageElement(page))
-			})
-		}
+		if(pages)
+			pages.forEach(page => items.appendChild(createPageElement(page)))
+
+		checkSearch()
 	})
 }
 
@@ -135,18 +139,44 @@ function refreshName() {
 
 	//Set the names to the divider name
 	document.getElementById("title").innerText = "(" + divider + ") | Divider"
-	document.getElementById("name").innerText = divider
 }
+
+function reloadDividerDropdown() {
+	var dropdown = document.getElementById("dropdown")
+
+	while(dropdown.lastChild)
+		dropdown.removeChild(dropdown.lastChild)
+
+	chrome.storage.local.get("dividers", items => {
+		items.dividers.forEach(divider => {
+			var option = document.createElement("option")
+			option.value = divider;
+			option.appendChild(document.createTextNode(divider))
+			dropdown.add(option)
+		})
+
+		dropdown.value = getDivider()
+	})
+}
+
+document.getElementById("dropdown").addEventListener("change", () => {
+	setDivider(document.getElementById("dropdown").value)
+	reloadItems()
+})
 
 document.getElementById("compressRight").addEventListener("click", () => {
 	DividerUtils.compressAll(getDivider(), (dividerTab, tab) => tab.index > dividerTab.index)
 })
 
 document.getElementById("expandRight").addEventListener("click", () => {
+	var items = document.getElementById("items").childNodes
 	var orderedIndices = []
 
-	for(var i = document.getElementById("items").childNodes.length - 1; i >= 0; i--)
-		orderedIndices.push(i)
+	for(var i = items.length - 1; i >= 0; i--) {
+		console.log(items[i].style.display)
+		if(!items[i].style.display || items[i].style.display == "block")
+			orderedIndices.push(i)
+	}
 
 	DividerUtils.expandAll(getDivider(), orderedIndices)
 })
@@ -165,6 +195,51 @@ document.getElementById("compressLeft").addEventListener("click", () => {
 
 document.getElementById("exportURLs").addEventListener("click", () => {
 	DividerUtils.exportURLs(getDivider())
+})
+
+function matchSearch(content, query) {
+	if(query.length == 0)
+		return true
+	
+	if(query.startsWith("regex:")) {
+		try {
+			if(new RegExp(query.substring(6)).test(content))
+				return true
+			else
+				return false
+		} catch(error) {
+			document.getElementById("searchbar").style.color = "orangered"
+		}
+	}
+		
+	if(content.includes(query))
+		return true
+	
+	return false;
+}
+
+function simplifyString(str) {
+	return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+}
+
+function checkSearch() {
+	var searchbar = document.getElementById("searchbar")
+	var input = simplifyString(searchbar.value)
+	searchbar.style.color = input.startsWith("regex:") ? "navy" : "black"
+
+	document.getElementById("items").childNodes.forEach(div => div.firstChild.childNodes.forEach(text => {
+		if(text.nodeType == Node.TEXT_NODE) {
+			var content = simplifyString(text.textContent)
+			div.style.display = matchSearch(content, input) ? "block" : "none"
+		}
+	}))
+}
+
+document.getElementById("searchbar").addEventListener("input", () => checkSearch())
+
+document.getElementById("searchbar").addEventListener("keydown", event => {
+	if(event.key == "Enter")
+		event.preventDefault()
 })
 
 function onMessage(message, sender, sendResponse) {
@@ -189,8 +264,7 @@ function onMessage(message, sender, sendResponse) {
 			break
 		case "dividerRename":
 			if(message.oldName == getDivider()) {
-				location.hash = message.newName
-				refreshName()
+				setDivider(message.newName)
 			}
 			break
 		case "dividerRemove":
@@ -202,13 +276,19 @@ function onMessage(message, sender, sendResponse) {
 				var items = document.getElementById("items")
 				items.insertBefore(items.children[message.oldIndex], items.children[message.newIndex])
 			}
+			break
 		default:
 			break
 	}
+
+	if(message.event == "dividerAdd" || message.event ==  "dividerRemove" ||
+	   message.event == "dividerRename" || message.event == "dividerReorder")
+		reloadDividerDropdown()
 }
 
 refreshName()
 reloadItems()
+reloadDividerDropdown()
 
 DividerUtils.onMessageSelf(onMessage)
 chrome.runtime.onMessage.addListener(onMessage)
