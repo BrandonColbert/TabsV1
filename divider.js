@@ -197,7 +197,7 @@ document.getElementById("exportURLs").addEventListener("click", () => {
 	DividerUtils.exportURLs(getDivider())
 })
 
-function matchSearch(content, query) {
+function matchSearch(query, content, url) {
 	if(query.length == 0)
 		return true
 	
@@ -211,7 +211,14 @@ function matchSearch(content, query) {
 			document.getElementById("searchbar").style.color = "orangered"
 		}
 	}
-		
+	
+	if(query.startsWith("url:")) {
+		if(url.includes(query.substring(4)))
+			return true
+		else
+			return false
+	}
+
 	if(content.includes(query))
 		return true
 	
@@ -223,16 +230,30 @@ function simplifyString(str) {
 }
 
 function checkSearch() {
+	//Get the searchbar and what is being searched for
 	var searchbar = document.getElementById("searchbar")
-	var input = simplifyString(searchbar.value)
-	searchbar.style.color = input.startsWith("regex:") ? "navy" : "black"
+	var query = simplifyString(searchbar.value)
 
-	document.getElementById("items").childNodes.forEach(div => div.firstChild.childNodes.forEach(text => {
-		if(text.nodeType == Node.TEXT_NODE) {
-			var content = simplifyString(text.textContent)
-			div.style.display = matchSearch(content, input) ? "block" : "none"
-		}
-	}))
+	//Make the searchbar text blue if it is using a special search
+	searchbar.style.color = (query.startsWith("regex:") || query.startsWith("url:")) ? "navy" : "black"
+
+	//Make all urls visible without hovering if the search begins with url: by adding the class searchResult
+	if(query.startsWith("url:"))
+		document.querySelectorAll(".pageSpan").forEach(element => element.childNodes[2].classList.add("searchResult"))
+	else
+		document.querySelectorAll(".searchResult").forEach(element => element.classList.remove("searchResult"))
+
+	//Check which pages should be shown based on their content
+	document.getElementById("items").childNodes.forEach(div => {
+		var spanNodes = div.firstChild.childNodes
+
+		//Get the content and url
+		var content = simplifyString(spanNodes[1].textContent)
+		var url = simplifyString(spanNodes[2].textContent)
+
+		//Check the match and set visibility
+		div.style.display = matchSearch(query, content, url) ? "block" : "none"
+	})
 }
 
 document.getElementById("searchbar").addEventListener("input", () => checkSearch())

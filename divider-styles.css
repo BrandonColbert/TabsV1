@@ -55,6 +55,10 @@ span > a {
 	color: transparent;
 }
 
+.searchResult {
+	color: blue !important;
+}
+
 span:hover > a {
 	color: blue;
 }
