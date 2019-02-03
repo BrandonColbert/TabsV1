@@ -1,3 +1,15 @@
+iframe {
+	display: block;
+
+	border: 1px solid;
+	border-color: gainsboro;
+
+	padding: 10px;
+
+	resize: both;
+	overflow: hidden;
+}
+
 #dropdown {
 	-webkit-appearance: none;
 

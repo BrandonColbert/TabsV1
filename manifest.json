@@ -1,4 +1,5 @@
 {
+	"manifest_version": 2,
 	"name": "Tabs+",
 	"version": "0.1.6",
 	"description": "Extends Chrome's tab management capabilities",
@@ -7,7 +8,10 @@
 		"activeTab",
 		"contextMenus",
 		"storage",
-		"tabs"
+		"tabs",
+		"webRequest",
+		"webRequestBlocking",
+		"<all_urls>"
 	],
 	"web_accessible_resources": [
 		"DividerUtils.js",
@@ -32,6 +36,5 @@
 		"32": "images/icon32.png",
 		"48": "images/icon48.png",
 		"128": "images/icon128.png"
-	},
-	"manifest_version": 2
+	}
 }

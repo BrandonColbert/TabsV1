@@ -43,8 +43,35 @@ function onMessage(message, sender, sendResponse) {
 	}
 }
 
+//Disable this functionality including right-click in divider if option disabled
+function bypassIFrameHeaders() {
+	chrome.webRequest.onHeadersReceived.addListener(
+		details => {
+			var toRemove = ["content-security-policy", "x-frame-options"]
+
+			var filteredHeaders = details.responseHeaders.filter(item => {
+				return !toRemove.includes(item.name.toLowerCase())
+			})
+
+			var newDetails = {
+				responseHeaders: filteredHeaders
+			}
+
+			return newDetails;
+		},
+		{
+			urls: ["<all_urls>"]
+		},
+		[
+			"blocking",
+			"responseHeaders"
+		]
+	)
+}
+
 function init() {
 	createContextMenus()
+	bypassIFrameHeaders()
 
 	DividerUtils.onMessageSelf(onMessage)
 	chrome.runtime.onMessage.addListener(onMessage)
