@@ -93,6 +93,10 @@ function createPageElement(page) {
 	//Make draggable
 	button.draggable = true
 
+	var removeOutlines = () => {
+		document.querySelectorAll(".dragTarget, .dragSource").forEach(element => element.classList.remove("dragTarget", "dragSource"))
+	}
+
 	button.addEventListener("dragstart", event => {
 		title.classList.add("dragSource")
 		event.dataTransfer.effectAllowed = "move"
@@ -100,8 +104,7 @@ function createPageElement(page) {
 	})
 
 	button.addEventListener("dragend", event => {
-		title.classList.remove("dragSource")
-		document.querySelectorAll(".dragTarget").forEach(element => element.classList.remove("dragTarget"))
+		removeOutlines()
 	})
 
 	title.addEventListener("dragover", event => {
@@ -119,6 +122,8 @@ function createPageElement(page) {
 
 			DividerUtils.reorderPage(getDivider(), dragIndex, dropIndex < dragIndex ? dropIndex : (dropIndex + 1))
 		}
+
+		removeOutlines()
 	})
 
 	spacer.addEventListener("dragover", event => {
@@ -136,6 +141,8 @@ function createPageElement(page) {
 
 			DividerUtils.reorderPage(getDivider(), dragIndex, dropIndex + 1)
 		}
+
+		removeOutlines()
 	})
 
 	//Handle highlighting drop location
@@ -211,7 +218,6 @@ document.getElementById("expandRight").addEventListener("click", () => {
 	var orderedIndices = []
 
 	for(var i = items.length - 1; i >= 0; i--) {
-		console.log(items[i].style.display)
 		if(!items[i].style.display || items[i].style.display == "block")
 			orderedIndices.push(i)
 	}
