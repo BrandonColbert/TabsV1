@@ -27,7 +27,11 @@ function createPageElement(page) {
 	button.classList.add("pageButton")
 	button.title = "Expand " + page.title
 
-	button.addEventListener("click", () => {
+	//Right click to open in new tab
+	button.addEventListener("contextmenu", event => {
+		//Disable context menu
+		event.preventDefault()
+
 		//Open url in a new tab next to the same tab
 		DividerUtils.expand(
 			getDivider(),
@@ -50,11 +54,8 @@ function createPageElement(page) {
 	viewer.sandbox = "allow-forms allow-pointer-lock allow-popups allow-scripts allow-same-origin"
 	viewer.setAttribute("allowFullScreen", "")
 
-	//Right click button to open view
-	button.addEventListener("contextmenu", event => {
-		//Disable context menu
-		event.preventDefault()
-
+	//Left click button to open view
+	button.addEventListener("click", () => {
 		//Toggle visibility of website
 		if(viewer.style.display == "none") {
 			viewer.style.display = null
