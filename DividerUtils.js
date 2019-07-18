@@ -21,6 +21,58 @@ export function open(name, redirect) {
 	}
 }
 
+/**
+ * Evalutates what url should be derived and saved based on the website
+ * @param tab Tab for the url
+ * @return A promise yielding the url
+ */
+function evaluateURL(tab) {
+	var url = tab.url
+
+	if(/^https:\/\/www.youtube.com\/watch\?/.test(url)) { //Check if youtube and return url with current timestamp
+		return new Promise((resolve, reject) => {
+			const retrieveURL = (msg, sender) => {
+				if(msg.event == "evaluateURL" && sender.url == url) {
+					chrome.runtime.onMessage.removeListener(retrieveURL)
+
+					if(msg != null && msg.url.length > 0)
+						url = msg.url
+
+					resolve(url)
+				}
+			}
+
+			chrome.runtime.onMessage.addListener(retrieveURL);
+
+			chrome.tabs.executeScript(tab.id, {
+				code: `
+					const sendURL = msg => {
+						window.removeEventListener("message", sendURL)
+
+						chrome.runtime.sendMessage({
+							"event": "evaluateURL",
+							"url": msg.data
+						})
+					}
+
+					window.addEventListener("message", sendURL)
+
+					var script = document.createElement("script")
+					var code = \`
+						var player = document.getElementById("movie_player")
+						var url = player != null ? player.getVideoUrl().replace(/t=.*&/, "t=" + Math.floor(player.getCurrentTime()) + "&") : null
+						window.postMessage(url, "*")
+					\`
+					script.appendChild(document.createTextNode(code))
+					document.querySelector("head").appendChild(script)
+				`
+			})
+		})
+	} else {
+		return new Promise((resolve, reject) => resolve(url))
+	}
+}
+
 //Compress all objects into the divider that return true for their predicate involving the divider's current tab and the tab in question
 export function compressAll(divider, predicate) {
 	//Get the page path
@@ -33,24 +85,26 @@ export function compressAll(divider, predicate) {
 					"currentWindow": true,
 					"pinned": false
 				},
-				tabs => {
+				async tabs => {
 					//Get the actual pages object
 					var pages = items[dividerPagePath]
 					var additionalPages = []
 
-					tabs.forEach(tab => {
+					for(var tab of tabs) {
 						//Compress if index is to the right
 						if(predicate(dividerTab, tab)) {
-							additionalPages.push({
-								"title": tab.title.length == 0 ? "[Unknown]" : tab.title,
-								"url": tab.url,
-								"time": new Date().getTime()
-							})
+							var url = await evaluateURL(tab)
 
 							//Remove the tab
 							chrome.tabs.remove(tab.id)
+
+							additionalPages.push({
+								"title": tab.title.length == 0 ? "[Unknown]" : tab.title,
+								"url": url,
+								"time": new Date().getTime()
+							})
 						}
-					})
+					}
 
 					sendMessage({
 						"event": "dividerBatchCompress",
@@ -67,19 +121,22 @@ export function compressAll(divider, predicate) {
 }
 
 export function compress(divider, tabId) {
-	chrome.tabs.get(tabId, tab => {
-		//Remove the current tab
-		chrome.tabs.remove(tab.id)
-
+	chrome.tabs.get(tabId, async tab => {
 		//Get the path for the divider
 		var dividerPagePath = getPagePath(divider)
+
+		//Get the url
+		var url = await evaluateURL(tab)
+
+		//Remove the current tab
+		chrome.tabs.remove(tab.id)
 
 		chrome.storage.local.get(dividerPagePath, items => {
 			var pages = items[dividerPagePath]
 
 			var page = {
 				"title": tab.title.length == 0 ? "[Unknown]" : tab.title,
-				"url": tab.url,
+				"url": url,
 				"time": new Date().getTime()
 			}
 
