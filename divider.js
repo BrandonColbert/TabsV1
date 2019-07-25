@@ -45,38 +45,50 @@ function createPageElement(page) {
 	link.href = page.url
 	link.appendChild(document.createTextNode("<" + page.url + ">"))
 
-	//Viewable frame
-	var viewer = document.createElement("iframe")
-	viewer.src = ""
-	viewer.width = window.innerWidth * 0.6
-	viewer.height = window.innerHeight * 0.5
-	viewer.style.display = "none"
-	viewer.sandbox = "allow-forms allow-pointer-lock allow-popups allow-scripts allow-same-origin"
-	viewer.setAttribute("allowFullScreen", "")
+	//Prevent interaction with iframe view while resizing to allow smoothness
+	var viewer;
+	var resizeTimer;
+	var resizer = new ResizeObserver(() => {
+		if(viewer != null) {
+			clearTimeout(resizeTimer)
+			viewer.style["pointer-events"] = "none" //Disable view interactions
 
-	//Left click button to open view
-	button.addEventListener("click", () => {
-		//Toggle visibility of website
-		if(viewer.style.display == "none") {
-			viewer.style.display = null
-			viewer.src = page.url
-		} else {
-			viewer.style.display = "none"
-			viewer.src = ""
+			resizeTimer = setTimeout(() => {
+				if(viewer != null)
+					viewer.style["pointer-events"] = null //Reenable view interaction
+			}, 100)
 		}
 	})
+/*
+	var buttonBack = document.createElement("button"), buttonForward = document.createElement("button"), buttonRefresh = document.createElement("button"), buttonFullscreen = document.createElement("button")
+	var navButtons = [buttonBack, buttonForward, buttonRefresh, buttonFullscreen]
 
-	var resizeTimer;
+	for(let i = 0; i < navButtons.length; i++) {
+		var button = navButtons[i]
+	}
+*/
+	//Left click button to open view
+	button.addEventListener("click", () => {
+		viewer = div.querySelector("#viewer")
 
-	//Prevent interaction with view while resizing to allow smoothness
-	new ResizeObserver(() => {
-		clearTimeout(resizeTimer)
-		viewer.style["pointer-events"] = "none" //Disable view interactions
+		//Toggle visibility of website
+		if(viewer == null) {
+			//Viewable frame
+			viewer = document.createElement("iframe")
+			viewer.id = "viewer"
+			viewer.src = page.url
+			viewer.width = window.innerWidth * 0.6
+			viewer.height = window.innerHeight * 0.5
+			viewer.sandbox = "allow-forms allow-pointer-lock allow-popups allow-scripts allow-same-origin"
+			viewer.setAttribute("allowFullScreen", "")
 
-		resizeTimer = setTimeout(() => {
-			viewer.style["pointer-events"] = null //Reenable view interaction
-		}, 100)
-	}).observe(viewer)
+			div.appendChild(viewer)
+			resizer.observe(viewer)			
+		} else {
+			resizer.unobserve(viewer)
+			div.removeChild(viewer)
+		}
+	})
 
 	//Spacer
 	var spacer = document.createElement("span")
@@ -87,7 +99,6 @@ function createPageElement(page) {
 	title.appendChild(document.createTextNode(page.title))
 	title.appendChild(link)
 	div.appendChild(title)
-	div.appendChild(viewer)
 	div.appendChild(spacer)
 
 	//Make draggable

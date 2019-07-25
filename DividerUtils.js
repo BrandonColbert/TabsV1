@@ -57,15 +57,24 @@ function evaluateURL(tab) {
 
 					window.addEventListener("message", sendURL)
 
-					var script = document.createElement("script")
-					var code = \`
-						var player = document.getElementById("movie_player")
-						var url = player != null ? player.getVideoUrl().replace(/t=.*&/, "t=" + Math.floor(player.getCurrentTime()) + "&") : null
-						window.postMessage(url, "*")
-					\`
-					script.appendChild(document.createTextNode(code))
-					document.querySelector("head").appendChild(script)
+					if(document.readyState === "complete") { //Try getting the video with timestamp if page is loaded
+						var script = document.createElement("script")
+						var code = \`
+							var player = document.getElementById("movie_player")
+							var url = player != null ? player.getVideoUrl().replace(/t=.*&/, "t=" + Math.floor(player.getCurrentTime()) + "&") : null
+							window.postMessage(url, "*")
+						\`
+						script.appendChild(document.createTextNode(code))
+						document.querySelector("head").appendChild(script)
+					} else {
+						window.postMessage(document.URL, "*") //Just use URL otherwise
+					}
 				`
+			}, () => {
+				if(chrome.runtime.lastError) {
+					chrome.runtime.onMessage.removeListener(retrieveURL)
+					resolve(url)
+				}
 			})
 		})
 	} else {
