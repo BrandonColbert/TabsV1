@@ -22,7 +22,7 @@ function createPageElement(page) {
 		DividerUtils.expand(
 			getPageDivider(tabItem),
 			getPageIndex(tabItem), //Account that summary is also a child
-			true
+			"redirect"
 		)
 	})
 
@@ -35,7 +35,7 @@ function createPageElement(page) {
 		DividerUtils.expand(
 			getPageDivider(tabItem),
 			getPageIndex(tabItem), //Account that summary is also a child
-			false
+			"new"
 		)
 	})
 

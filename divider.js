@@ -15,15 +15,15 @@ function getButtonIndex(button) {
 
 function createPageElement(page) {
 	//Create divider and text
-	var div = document.createElement("div")
+	let div = document.createElement("div")
 	div.classList.add("page")
 
 	//Add title
-	var title = document.createElement("span")
+	let title = document.createElement("span")
 	title.classList.add("pageSpan")
 
 	//Add expand button
-	var button = document.createElement("button")
+	let button = document.createElement("button")
 	button.classList.add("pageButton")
 	button.title = "Expand " + page.title
 
@@ -36,19 +36,19 @@ function createPageElement(page) {
 		DividerUtils.expand(
 			getDivider(),
 			getButtonIndex(button),
-			false
+			"new"
 		)
 	})
 
 	//Add link
-	var link = document.createElement("a")
+	let link = document.createElement("a")
 	link.href = page.url
 	link.appendChild(document.createTextNode("<" + page.url + ">"))
 
 	//Prevent interaction with iframe view while resizing to allow smoothness
-	var viewer;
-	var resizeTimer;
-	var resizer = new ResizeObserver(() => {
+	let viewer
+	let resizeTimer
+	let resizer = new ResizeObserver(() => {
 		if(viewer != null) {
 			clearTimeout(resizeTimer)
 			viewer.style["pointer-events"] = "none" //Disable view interactions
@@ -59,20 +59,70 @@ function createPageElement(page) {
 			}, 100)
 		}
 	})
-/*
-	var buttonBack = document.createElement("button"), buttonForward = document.createElement("button"), buttonRefresh = document.createElement("button"), buttonFullscreen = document.createElement("button")
-	var navButtons = [buttonBack, buttonForward, buttonRefresh, buttonFullscreen]
+
+	//Create nav buttons for iframe
+	let buttonBack = document.createElement("button"),
+		buttonForward = document.createElement("button"),
+		buttonRefresh = document.createElement("button"),
+		buttonFullscreen = document.createElement("button"),
+		buttonDelete = document.createElement("button")
+	
+	buttonBack.classList.add("navButtonBack")
+	buttonBack.innerHTML = "&#x2190;"
+	buttonBack.onclick = () => {
+		if(viewer != null)
+			viewer.contentWindow.postMessage("back", "*")
+	}
+
+	buttonForward.classList.add("navButtonForward")
+	buttonForward.innerHTML = "&#x2192;"
+	buttonForward.onclick = () => {
+		if(viewer != null)
+			viewer.contentWindow.postMessage("forward", "*")
+	}
+
+	buttonRefresh.classList.add("navButtonRefresh")
+	buttonRefresh.innerHTML = "&#x27f3;"
+	buttonRefresh.onclick = () => {
+		if(viewer != null)
+			viewer.contentWindow.postMessage("reload", "*")
+	}
+
+	buttonFullscreen.classList.add("navButtonFullscreen")
+	buttonFullscreen.innerHTML = "&#x26f6"
+	buttonFullscreen.onclick = () => {
+		if(viewer != null)
+			viewer.requestFullscreen()
+	}
+
+	buttonDelete.classList.add("navButtonDelete")
+	buttonDelete.innerHTML = "&#x00d7"
+	buttonDelete.onclick = () => {
+		DividerUtils.expand(
+			getDivider(),
+			getButtonIndex(button),
+			"none"
+		)
+	}
+
+	let navButtons = [buttonBack, buttonForward, buttonRefresh, buttonFullscreen, buttonDelete]
 
 	for(let i = 0; i < navButtons.length; i++) {
-		var button = navButtons[i]
+		let button = navButtons[i]
+		button.classList.add("pageButton", "navButton")
+		button.style.display = "none"
 	}
-*/
+
 	//Left click button to open view
 	button.addEventListener("click", () => {
 		viewer = div.querySelector("#viewer")
 
 		//Toggle visibility of website
 		if(viewer == null) {
+			//Nav buttons
+			for(let i = 0; i < navButtons.length; i++)
+				navButtons[i].style.display = null
+
 			//Viewable frame
 			viewer = document.createElement("iframe")
 			viewer.id = "viewer"
@@ -80,19 +130,25 @@ function createPageElement(page) {
 			viewer.width = window.innerWidth * 0.6
 			viewer.height = window.innerHeight * 0.5
 			viewer.sandbox = "allow-forms allow-pointer-lock allow-popups allow-scripts allow-same-origin"
-			viewer.setAttribute("allowFullScreen", "")
+			viewer.setAttribute("allowFullScreen", "true")
 
 			div.appendChild(viewer)
-			resizer.observe(viewer)			
+			resizer.observe(viewer)
 		} else {
 			resizer.unobserve(viewer)
 			div.removeChild(viewer)
+
+			for(let i = 0; i < navButtons.length; i++)
+				navButtons[i].style.display = "none"
 		}
 	})
 
 	//Spacer
-	var spacer = document.createElement("span")
+	let spacer = document.createElement("span")
 	spacer.classList.add("pageSpacer")
+
+	for(let i = 0; i < navButtons.length; i++)
+		spacer.appendChild(navButtons[i])
 
 	//Show correctly
 	title.appendChild(button)
@@ -104,7 +160,7 @@ function createPageElement(page) {
 	//Make draggable
 	button.draggable = true
 
-	var removeOutlines = () => {
+	let removeOutlines = () => {
 		document.querySelectorAll(".dragTarget, .dragSource").forEach(element => element.classList.remove("dragTarget", "dragSource"))
 	}
 
@@ -125,11 +181,11 @@ function createPageElement(page) {
 
 	title.addEventListener("drop", event => {
 		event.stopPropagation()
-		var dividerPageIndex = event.dataTransfer.getData("divider_page_index")
+		let dividerPageIndex = event.dataTransfer.getData("divider_page_index")
 
 		if(dividerPageIndex) {
-			var dragIndex = parseInt(dividerPageIndex)
-			var dropIndex = getButtonIndex(button)
+			let dragIndex = parseInt(dividerPageIndex)
+			let dropIndex = getButtonIndex(button)
 
 			DividerUtils.reorderPage(getDivider(), dragIndex, dropIndex < dragIndex ? dropIndex : (dropIndex + 1))
 		}
@@ -144,11 +200,11 @@ function createPageElement(page) {
 
 	spacer.addEventListener("drop", event => {
 		event.stopPropagation()
-		var dividerPageIndex = event.dataTransfer.getData("divider_page_index")
+		let dividerPageIndex = event.dataTransfer.getData("divider_page_index")
 
 		if(dividerPageIndex) {
-			var dragIndex = parseInt(dividerPageIndex)
-			var dropIndex = getButtonIndex(button)
+			let dragIndex = parseInt(dividerPageIndex)
+			let dropIndex = getButtonIndex(button)
 
 			DividerUtils.reorderPage(getDivider(), dragIndex, dropIndex + 1)
 		}
@@ -169,10 +225,10 @@ function createPageElement(page) {
 }
 
 function reloadItems() {
-	var dividerPagePath = "dividers." + getDivider() + ".pages"
+	let dividerPagePath = "dividers." + getDivider() + ".pages"
 
 	//Get the items
-	var items = document.getElementById("items")
+	let items = document.getElementById("items")
 
 	//Remove all the children
 	while(items.lastChild)
@@ -191,22 +247,22 @@ function reloadItems() {
 }
 
 function refreshName() {
-	var divider = getDivider()
+	let divider = getDivider()
 
 	//Set the names to the divider name
 	document.getElementById("title").innerText = "(" + divider + ") | Divider"
 }
 
 function reloadDividerDropdown() {
-	var dropdown = document.getElementById("dropdown")
+	let dropdown = document.getElementById("dropdown")
 
 	while(dropdown.lastChild)
 		dropdown.removeChild(dropdown.lastChild)
 
 	chrome.storage.local.get("dividers", items => {
 		items.dividers.forEach(divider => {
-			var option = document.createElement("option")
-			option.value = divider;
+			let option = document.createElement("option")
+			option.value = divider
 			option.appendChild(document.createTextNode(divider))
 			dropdown.add(option)
 		})
@@ -225,10 +281,10 @@ document.getElementById("compressRight").addEventListener("click", () => {
 })
 
 document.getElementById("expandRight").addEventListener("click", () => {
-	var items = document.getElementById("items").childNodes
-	var orderedIndices = []
+	let items = document.getElementById("items").childNodes
+	let orderedIndices = []
 
-	for(var i = items.length - 1; i >= 0; i--) {
+	for(let i = items.length - 1; i >= 0; i--) {
 		if(!items[i].style.display || items[i].style.display == "block")
 			orderedIndices.push(i)
 	}
@@ -277,7 +333,7 @@ function matchSearch(query, content, url) {
 	if(content.includes(query))
 		return true
 	
-	return false;
+	return false
 }
 
 function simplifyString(str) {
@@ -286,8 +342,8 @@ function simplifyString(str) {
 
 function checkSearch() {
 	//Get the searchbar and what is being searched for
-	var searchbar = document.getElementById("searchbar")
-	var query = simplifyString(searchbar.value)
+	let searchbar = document.getElementById("searchbar")
+	let query = simplifyString(searchbar.value)
 
 	//Make the searchbar text blue if it is using a special search
 	searchbar.style.color = (query.startsWith("regex:") || query.startsWith("url:")) ? "navy" : "black"
@@ -300,11 +356,11 @@ function checkSearch() {
 
 	//Check which pages should be shown based on their content
 	document.getElementById("items").childNodes.forEach(div => {
-		var spanNodes = div.firstChild.childNodes
+		let spanNodes = div.firstChild.childNodes
 
 		//Get the content and url
-		var content = simplifyString(spanNodes[1].textContent)
-		var url = simplifyString(spanNodes[2].textContent)
+		let content = simplifyString(spanNodes[1].textContent)
+		let url = simplifyString(spanNodes[2].textContent)
 
 		//Check the match and set visibility
 		div.style.display = matchSearch(query, content, url) ? "block" : "none"
@@ -322,13 +378,13 @@ function onMessage(message, sender, sendResponse) {
 	switch(message.event) {
 		case "dividerBatchExpand":
 			if(message.divider == getDivider()) {
-				var items = document.getElementById("items").children
+				let items = document.getElementById("items").children
 				message.orderedIndices.forEach(index => items[index].remove())
 			}
 			break
 		case "dividerBatchCompress":
 			if(message.divider == getDivider()) {
-				var items = document.getElementById("items")
+				let items = document.getElementById("items")
 				message.pages.forEach(page => items.appendChild(createPageElement(page)))
 				checkSearch()
 			}
@@ -357,7 +413,7 @@ function onMessage(message, sender, sendResponse) {
 			break
 		case "pageReorder":
 			if(message.divider == getDivider()) {
-				var items = document.getElementById("items")
+				let items = document.getElementById("items")
 				items.insertBefore(items.children[message.oldIndex], items.children[message.newIndex])
 			}
 			break

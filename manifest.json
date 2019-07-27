@@ -31,6 +31,11 @@
 			"128": "images/icon128.png"
 		}
 	},
+	"content_scripts": [{
+		"matches": ["<all_urls>"],
+		"all_frames": true,
+		"js": ["divider_viewer.js"]
+	}],
 	"icons": {
 		"16": "images/icon16.png",
 		"32": "images/icon32.png",

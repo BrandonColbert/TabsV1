@@ -32,7 +32,7 @@ function evaluateURL(tab) {
 	if(/^https:\/\/www.youtube.com\/watch\?/.test(url)) { //Check if youtube and return url with current timestamp
 		return new Promise((resolve, reject) => {
 			const retrieveURL = (msg, sender) => {
-				if(msg.event == "evaluateURL" && sender.url == url) {
+				if(sender.url == url && msg.event == "evaluateURL") {
 					chrome.runtime.onMessage.removeListener(retrieveURL)
 
 					if(msg != null && msg.url.length > 0)
@@ -47,12 +47,14 @@ function evaluateURL(tab) {
 			chrome.tabs.executeScript(tab.id, {
 				code: `
 					const sendURL = msg => {
-						window.removeEventListener("message", sendURL)
+						if(msg.origin === (window.location.protocol + "//" + window.location.hostname)) {
+							window.removeEventListener("message", sendURL)
 
-						chrome.runtime.sendMessage({
-							"event": "evaluateURL",
-							"url": msg.data
-						})
+							chrome.runtime.sendMessage({
+								"event": "evaluateURL",
+								"url": msg.data
+							})
+						}
 					}
 
 					window.addEventListener("message", sendURL)
@@ -203,7 +205,7 @@ export function expandAll(divider, orderedIndices) {
 	})
 }
 
-export function expand(divider, pageIndex, redirect) {
+export function expand(divider, pageIndex, type) {
 	sendMessage({
 		"event": "dividerExpand",
 		"divider": divider,
@@ -219,16 +221,25 @@ export function expand(divider, pageIndex, redirect) {
 		var page = pages[pageIndex]
 		pages.splice(pageIndex, 1)
 
-		if(redirect) {
-			chrome.tabs.update({
-				"url": page.url
-			})
-		} else {
-			chrome.tabs.getSelected(tab => chrome.tabs.create({
-				"url": page.url,
-				"active": false,
-				"index": tab.index + 1
-			}))
+		switch(type) {
+			case "redirect": {
+				chrome.tabs.update({
+					"url": page.url
+				})
+
+				break
+			}
+			case "new": {
+				chrome.tabs.getSelected(tab => chrome.tabs.create({
+					"url": page.url,
+					"active": false,
+					"index": tab.index + 1
+				}))
+
+				break
+			}
+			case "none": default:
+				break
 		}
 
 		//Update

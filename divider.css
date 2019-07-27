@@ -1,6 +1,7 @@
 iframe {
 	display: block;
 
+	background-color: white;
 	border: 1px solid;
 	border-color: gainsboro;
 
@@ -50,8 +51,7 @@ iframe {
 
 .pageSpacer {
 	display: block;
-	height: 20px;
-	width: 100%;
+	margin: 20px 0px 10px;
 }
 
 .pageSpan {
@@ -146,4 +146,33 @@ span > a:hover {
 
 #gc4 {
 	grid-area: pages;
+}
+
+.navButton {
+	height: 30px;
+	width: 30px;
+	margin: auto 5px;
+
+	user-select: none;
+	cursor: default;
+
+	font-size: 20px;
+	text-align: center;
+	vertical-align: middle;
+
+	border: 1px solid transparent;
+	border-radius: 50%;
+}
+
+.navButton:hover {
+	color: rgb(228, 228, 228);
+	transition: 0.1s ease-in;
+}
+
+.navButtonRefresh, .navButtonFullscreen, .navButtonDelete {
+	margin-left: 25px;
+}
+
+#viewer {
+	user-select: none;
 }
