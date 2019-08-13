@@ -1,4 +1,4 @@
-import * as DividerUtils from "/DividerUtils.js"
+import DividerUtils from "/js/classes/dividerutils.js"
 
 function getPageIndex(button) {
 	return Array.from(button.parentNode.parentNode.children).indexOf(button.parentNode) - 1
@@ -14,7 +14,7 @@ function getDividerIndex(details) {
 
 function createPageElement(page) {
 	//Create the button for the page and define actions for clicking it
-	var tabItem = document.createElement("button")
+	let tabItem = document.createElement("button")
 	tabItem.appendChild(document.createTextNode(page.title))
 
 	//Navigate to page on left-click
@@ -40,7 +40,7 @@ function createPageElement(page) {
 	})
 
 	//Make draggable
-	var span = document.createElement("span")
+	let span = document.createElement("span")
 	span.appendChild(tabItem)
 
 	tabItem.draggable = true
@@ -53,11 +53,11 @@ function createPageElement(page) {
 
 	tabItem.addEventListener("drop", event => {
 		event.stopPropagation()
-		var pageIndex = event.dataTransfer.getData("page_index")
+		let pageIndex = event.dataTransfer.getData("page_index")
 
 		if(pageIndex) {
-			var dragIndex = parseInt(pageIndex)
-			var dropIndex = getPageIndex(tabItem)
+			let dragIndex = parseInt(pageIndex)
+			let dropIndex = getPageIndex(tabItem)
 
 			DividerUtils.reorderPage(getPageDivider(tabItem), dragIndex, dropIndex < dragIndex ? dropIndex : (dropIndex + 1))
 		}
@@ -71,7 +71,7 @@ function createPageElement(page) {
 
 	span.addEventListener("drop", event => {
 		event.stopPropagation()
-		var pageIndex = event.dataTransfer.getData("page_index")
+		let pageIndex = event.dataTransfer.getData("page_index")
 
 		if(pageIndex)
 			DividerUtils.reorderPage(getPageDivider(tabItem), parseInt(pageIndex), getPageIndex(tabItem))
@@ -82,14 +82,14 @@ function createPageElement(page) {
 
 function createDivider(name) {
 	//Create the dividers details and assign it the same id as its page path
-	var details = document.createElement("details")
+	let details = document.createElement("details")
 	details.id = name
 
 	//Make the name the same as the divider name
-	var summary = document.createElement("summary")
+	let summary = document.createElement("summary")
 
 	//Right click text to edit divider name
-	var dividerName = document.createElement("text")
+	let dividerName = document.createElement("text")
 	dividerName.dataset.original = name
 
 	dividerName.addEventListener("contextmenu", event => {
@@ -101,7 +101,7 @@ function createDivider(name) {
 		dividerName.focus()
 
 		//Select all text
-		var range = document.createRange()
+		let range = document.createRange()
 		range.selectNodeContents(dividerName)
 		window.getSelection().removeAllRanges()
 		window.getSelection().addRange(range)
@@ -146,7 +146,7 @@ function createDivider(name) {
 	})
 
 	//Show button to navigate to the divider's page
-	var pageButton = document.createElement("button")
+	let pageButton = document.createElement("button")
 	pageButton.classList.add("pageButton")
 
 	pageButton.addEventListener("click", () => {
@@ -161,7 +161,7 @@ function createDivider(name) {
 	details.appendChild(summary)
 	
 	//Make draggable
-	var span = document.createElement("span")
+	let span = document.createElement("span")
 	span.classList.add("dividerSpan")
 	span.appendChild(details)
 
@@ -174,11 +174,11 @@ function createDivider(name) {
 
 	details.addEventListener("drop", event => {
 		event.stopPropagation()
-		var dividerIndex = event.dataTransfer.getData("divider_index")
+		let dividerIndex = event.dataTransfer.getData("divider_index")
 
 		if(dividerIndex) {
-			var dragIndex = parseInt(dividerIndex)
-			var dropIndex = getDividerIndex(details)
+			let dragIndex = parseInt(dividerIndex)
+			let dropIndex = getDividerIndex(details)
 
 			DividerUtils.reorder(dragIndex, dropIndex < dragIndex ? dropIndex : (dropIndex + 1))
 		}
@@ -192,7 +192,7 @@ function createDivider(name) {
 
 	span.addEventListener("drop", event => {
 		event.stopPropagation()
-		var dividerIndex = event.dataTransfer.getData("divider_index")
+		let dividerIndex = event.dataTransfer.getData("divider_index")
 
 		if(dividerIndex)
 			DividerUtils.reorder(parseInt(dividerIndex), getDividerIndex(details))
@@ -202,7 +202,7 @@ function createDivider(name) {
 	document.getElementById("tab-dividers").appendChild(span)
 
 	//Get the page path based on the name
-	var dividerPagePath = "dividers." + name + ".pages"
+	let dividerPagePath = "dividers." + name + ".pages"
 
 	//Populate the urls in the divider
 	chrome.storage.local.get(dividerPagePath, pageItems => {
@@ -223,28 +223,31 @@ chrome.storage.local.get("dividers", items => {
 
 function onMessage(message, sender, sendResponse) {
 	switch(message.event) {
-		case "dividerBatchExpand":
-			var details = document.getElementById(message.divider).children
+		case "dividerBatchExpand": {
+			let details = document.getElementById(message.divider).children
 			message.orderedIndices.forEach(index => details[index + 1].remove())
 			break
-		case "dividerBatchCompress":
-			var details = document.getElementById(message.divider)
+		}
+		case "dividerBatchCompress": {
+			let details = document.getElementById(message.divider)
 			message.pages.forEach(page => details.appendChild(createPageElement(page)))
 			break
+		}
 		case "dividerExpand":
 			document.getElementById(message.divider).children[message.pageIndex + 1].remove()
 			break
 		case "dividerCompress":
 			document.getElementById(message.divider).appendChild(createPageElement(message.page))
 			break
-		case "dividerRename":
-			var details = document.getElementById(message.oldName)
-			var dividerText = details.firstChild.childNodes[1]
+		case "dividerRename": {
+			let details = document.getElementById(message.oldName)
+			let dividerText = details.firstChild.childNodes[1]
 
 			details.id = message.newName
 			dividerText.dataset.original = message.newName
 			dividerText.textContent = message.newName
 			break
+		}
 		case "dividerRemove":
 			document.getElementById(message.name).remove()
 			break
@@ -252,11 +255,11 @@ function onMessage(message, sender, sendResponse) {
 			createDivider(message.name)
 			break
 		case "dividerReorder":
-			var dividers = document.getElementById("tab-dividers")
+			let dividers = document.getElementById("tab-dividers")
 			dividers.insertBefore(dividers.children[message.oldIndex], dividers.children[message.newIndex])
 		case "pageReorder":
 			if(message.divider) {
-				var details = document.getElementById(message.divider)
+				let details = document.getElementById(message.divider)
 				details.insertBefore(details.children[message.oldIndex + 1], details.children[message.newIndex + 1])
 			}
 		default:

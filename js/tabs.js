@@ -1,4 +1,4 @@
-import * as DividerUtils from "/DividerUtils.js"
+import DividerUtils from "/js/classes/dividerutils.js"
 
 function createContextMenus() {
 	//'Compress to' for context menu
@@ -8,7 +8,7 @@ function createContextMenus() {
 		"contexts": ["page", "frame", "selection", "page_action"]
 	})
 
-	var compress = (info, tab) => DividerUtils.compress(info.menuItemId.split("_")[2], tab.id);
+	let compress = (info, tab) => DividerUtils.compress(info.menuItemId.split("_")[2], tab.id);
 
 	//Create context menus for each divider under dividers
 	chrome.storage.local.get("dividers", items => {
@@ -47,13 +47,11 @@ function onMessage(message, sender, sendResponse) {
 function bypassIFrameHeaders() {
 	chrome.webRequest.onHeadersReceived.addListener(
 		details => {
-			var toRemove = ["content-security-policy", "x-frame-options"]
+			let toRemove = ["content-security-policy", "x-frame-options"]
 
-			var filteredHeaders = details.responseHeaders.filter(item => {
-				return !toRemove.includes(item.name.toLowerCase())
-			})
+			let filteredHeaders = details.responseHeaders.filter(item => !toRemove.includes(item.name.toLowerCase()))
 
-			var newDetails = {
+			let newDetails = {
 				responseHeaders: filteredHeaders
 			}
 
