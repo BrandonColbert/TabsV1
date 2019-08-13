@@ -1,43 +1,31 @@
 import DividerUtils from "/js/classes/dividerutils.js"
 
 function createContextMenus() {
-	//'Compress to' for context menu
+	//Compress to closest divider left of tab
 	chrome.contextMenus.create({
 		"id": "menu_page",
-		"title": "Compress to",
-		"contexts": ["page", "frame", "selection", "page_action"]
-	})
+		"title": "Compress",
+		"contexts": ["page", "frame", "selection", "page_action"],
+		"onclick": (info, tab) => {
+			//Get all the tabs in the window
+			chrome.tabs.getAllInWindow(null, tabs => {
+				//Iterate through all the tabs between 0 and the current tab from left to right
+				for(let i = tab.index - 1; i >= 0; i--) {
+					let foundTab = tabs[i]
 
-	let compress = (info, tab) => DividerUtils.compress(info.menuItemId.split("_")[2], tab.id);
-
-	//Create context menus for each divider under dividers
-	chrome.storage.local.get("dividers", items => {
-		//Iterate through stored divider names
-		items.dividers.forEach(element => {
-			//Create the context menu shown when right-clicking on a page
-			chrome.contextMenus.create({
-				"parentId": "menu_page",
-				"id": "menu_page_" + element,
-				"title": element,
-				"onclick": compress
+					//If the tab is a divider, compress to it and stop
+					if(foundTab.url.startsWith("chrome-extension://" + chrome.runtime.id + "/divider")) {
+						DividerUtils.compress(decodeURIComponent(foundTab.url.substring(foundTab.url.indexOf('#') + 1)), tab.id)
+						break;
+					}
+				}
 			})
-
-			//Create the context menu shown when right-clicking the icon on the toolbar
-			chrome.contextMenus.create({
-				"id": "menu_icon_" + element,
-				"title": "Compress to " + element,
-				"contexts": ["browser_action"],
-				"onclick": compress
-			})
-		})
+		}
 	})
 }
 
 function onMessage(message, sender, sendResponse) {
 	switch(message.event) {
-		case "dividerRename": case "dividerRemove": case "dividerAdd": case "dividerReorder":
-			chrome.contextMenus.removeAll(() => createContextMenus())
-			break
 		default:
 			break
 	}

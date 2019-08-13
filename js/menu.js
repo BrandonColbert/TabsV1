@@ -154,6 +154,13 @@ function createDivider(name) {
 		DividerUtils.open(dividerName.dataset.original, false)
 	})
 
+	pageButton.oncontextmenu = () => {
+		event.preventDefault()
+
+		//Compress the open tab to the divider
+		chrome.tabs.query({active: true, lastFocusedWindow: true}, tabs => DividerUtils.compress(dividerName.dataset.original, tabs[0].id))
+	}
+
 	//Display them properly in html
 	dividerName.appendChild(document.createTextNode(name))
 	summary.appendChild(pageButton)

@@ -7,6 +7,9 @@ import Searchbar from "/js/classes/searchbar.js"
  */
 export default class Divider {
 	constructor() {
+		//Initial setup
+		this.name = this.name
+
 		//Register elements
 		this.dropdown = document.getElementById("dropdown")
 		this.pages = document.getElementById("pages")
@@ -27,11 +30,6 @@ export default class Divider {
 		this.searchbar.element.oninput = () => this.checkSearch()
 		this.searchbar.element.onkeydown = event => event.key == "Enter" ? event.preventDefault() : null
 
-		this.dropdown.onchange = () => {
-			this.name = dropdown.value
-			this.reloadPages()
-		}
-
 		this.buttonExpandRight.onclick = () => {
 			let items = pages.childNodes
 			let orderedIndices = []
@@ -44,8 +42,10 @@ export default class Divider {
 			DividerUtils.expandAll(this.name, orderedIndices)
 		}
 
-		//Extra setup
-		this.name = this.name
+		this.dropdown.onchange = () => {
+			this.name = dropdown.value
+			this.reloadPages()
+		}
 	}
 
 	/**

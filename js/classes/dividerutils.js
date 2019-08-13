@@ -101,9 +101,6 @@ export default class DividerUtils {
 			//Get the url
 			let url = await URLEvaluator.evaluate(tab)
 
-			//Remove the current tab
-			chrome.tabs.remove(tab.id)
-
 			chrome.storage.local.get(dividerPagePath, items => {
 				let pages = items[dividerPagePath]
 
@@ -112,6 +109,9 @@ export default class DividerUtils {
 					"url": url,
 					"time": new Date().getTime()
 				}
+
+				//Remove the current tab
+				chrome.tabs.remove(tab.id)
 
 				//Add the page to the array
 				pages.push(page)
