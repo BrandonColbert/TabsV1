@@ -19,11 +19,11 @@ export default class Divider {
 		this.buttonCompressLeft = document.getElementById("compressLeft")
 
 		//Setup interactable elements
-		this.buttonDelete.onclick = () => DividerUtils.remove(this.name)
-		this.buttonExportSave.onclick = () => DividerUtils.exportAll()
 		this.buttonCompressLeft.onclick = () => DividerUtils.compressAll(this.name, (dividerTab, tab) => tab.index < dividerTab.index)
 		this.buttonCompressRight.onclick = () => DividerUtils.compressAll(this.name, (dividerTab, tab) => tab.index > dividerTab.index)
 		this.buttonExportURLs.onclick = () => DividerUtils.exportURLs(this.name)
+		this.buttonExportSave.onclick = () => DividerUtils.exportAll()
+		this.buttonDelete.onclick = () => confirm("Are you sure you want to delete '" + this.name + "'") ? DividerUtils.remove(this.name) : null
 		this.searchbar.element.oninput = () => this.checkSearch()
 		this.searchbar.element.onkeydown = event => event.key == "Enter" ? event.preventDefault() : null
 

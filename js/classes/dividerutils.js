@@ -44,7 +44,7 @@ export default class DividerUtils {
 	 */
 	static compressAll(divider, predicate) {
 		//Get the page path
-		let dividerPagePath = getPagePath(divider)
+		let dividerPagePath = this.getPagePath(divider)
 
 		chrome.storage.local.get(dividerPagePath, items => { //Get the object for the page path
 			chrome.tabs.getCurrent(dividerTab => { //Get the current tab
@@ -96,7 +96,7 @@ export default class DividerUtils {
 	static compress(divider, tabId) {
 		chrome.tabs.get(tabId, async tab => {
 			//Get the path for the divider
-			let dividerPagePath = getPagePath(divider)
+			let dividerPagePath = this.getPagePath(divider)
 
 			//Get the url
 			let url = await URLEvaluator.evaluate(tab)
@@ -140,7 +140,7 @@ export default class DividerUtils {
 			"orderedIndices": orderedIndices
 		})
 
-		let dividerPagePath = getPagePath(divider)
+		let dividerPagePath = this.getPagePath(divider)
 
 		chrome.storage.local.get(dividerPagePath, pageItems => {
 			const oldPages = pageItems[dividerPagePath]
@@ -188,7 +188,7 @@ export default class DividerUtils {
 		})
 
 		//Find the divider path
-		let dividerPagePath = getPagePath(divider)
+		let dividerPagePath = this.getPagePath(divider)
 
 		chrome.storage.local.get(dividerPagePath, pageItems => {
 			//Remove from pages by index
@@ -390,7 +390,7 @@ export default class DividerUtils {
 				"newIndex": newIndex
 			})
 
-			let dividerPagePath = getPagePath(divider)
+			let dividerPagePath = this.getPagePath(divider)
 
 			chrome.storage.local.get(dividerPagePath, pageItems => {
 				let pages = pageItems[dividerPagePath]
@@ -421,7 +421,7 @@ export default class DividerUtils {
 	 * @param {string} divider Name of divider
 	 */
 	static exportURLs(divider) {
-		const pagePath = getPagePath(divider)
+		const pagePath = this.getPagePath(divider)
 
 		chrome.storage.local.get(pagePath, items => {
 			let data = ""

@@ -4,7 +4,7 @@ export default class URLEvaluator {
 	 * @param tab Tab for the url
 	 * @return A promise yielding the url
 	 */
-	static evluate(tab) {
+	static evaluate(tab) {
 		let url = tab.url
 
 		if(/^https:\/\/www.youtube.com\/watch\?/.test(url)) { //Check if youtube and return url with current timestamp

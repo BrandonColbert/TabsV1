@@ -1,5 +1,6 @@
 import Divider from "/js/classes/divider.js"
 import DividerUtils from "/js/classes/dividerutils.js"
+import Page from "/js/classes/page.js"
 
 let divider = new Divider()
 
@@ -17,7 +18,7 @@ function onMessage(message, sender, sendResponse) {
 		case "dividerBatchCompress":
 			if(message.divider == divider.name) {
 				let items = divider.pages
-				message.pages.forEach(page => items.appendChild(divider.createPageElement(page)))
+				message.pages.forEach(page => items.appendChild(new Page(divider, page).div))
 				divider.checkSearch()
 			}
 			break
@@ -27,7 +28,7 @@ function onMessage(message, sender, sendResponse) {
 			break
 		case "dividerCompress":
 			if(message.divider == divider.name) {
-				divider.pages.appendChild(divider.createPageElement(message.page))
+				divider.pages.appendChild(new Page(divider, message.page).div)
 				divider.checkSearch()
 			}
 			break
