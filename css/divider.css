@@ -44,7 +44,9 @@ iframe {
 	border: 0px;
 	border-style: ridge;	
 	border-radius: 12px;
-	text-indent: 6px;
+
+	padding-left: 8px;
+	padding-right: 8px;
 }
 
 .dragSource {

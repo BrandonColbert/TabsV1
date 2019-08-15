@@ -7,7 +7,7 @@ export default class URLEvaluator {
 	static evaluate(tab) {
 		let url = tab.url
 
-		if(/^https:\/\/www.youtube.com\/watch\?/.test(url)) { //Check if youtube and return url with current timestamp
+		if(false && /^https:\/\/www.youtube.com\/watch\?/.test(url)) { //Check if youtube and return url with current timestamp
 			return new Promise((resolve, reject) => {
 				const retrieveURL = (msg, sender) => {
 					if(sender.url == url && msg.event == "evaluateURL") {

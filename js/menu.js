@@ -149,12 +149,12 @@ function createDivider(name) {
 	let pageButton = document.createElement("button")
 	pageButton.classList.add("pageButton")
 
-	pageButton.addEventListener("click", () => {
+	pageButton.oncontextmenu = () => {
 		//Open divider with the divider's name as metadata
 		DividerUtils.open(dividerName.dataset.original, false)
-	})
+	}
 
-	pageButton.oncontextmenu = () => {
+	pageButton.onclick = () => {
 		event.preventDefault()
 
 		//Compress the open tab to the divider
