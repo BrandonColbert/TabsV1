@@ -58,7 +58,9 @@ export default class DividerUtils {
 						let pages = items[dividerPagePath]
 						let additionalPages = []
 
-						for(let tab of tabs) {
+						for(let i = tabs.length - 1; i >= 0; i--) {
+							let tab = tabs[i]
+
 							//Compress if predicate returns true
 							if(predicate(dividerTab, tab)) {
 								let url = await URLEvaluator.evaluate(tab)
@@ -81,7 +83,7 @@ export default class DividerUtils {
 						})
 
 						//Update with new pages
-						chrome.storage.local.set({[dividerPagePath]: pages.concat(additionalPages)})
+						chrome.storage.local.set({[dividerPagePath]: additionalPages.concat(pages)})
 					}
 				)
 			})
@@ -114,7 +116,7 @@ export default class DividerUtils {
 				chrome.tabs.remove(tab.id)
 
 				//Add the page to the array
-				pages.push(page)
+				pages.unshift(page)
 
 				sendMessage({
 					"event": "dividerCompress",
@@ -131,7 +133,7 @@ export default class DividerUtils {
 	/**
 	 * Expands each page at the index to the directly to the right of the divider tab in the corresponding order
 	 * @param {string} divider Name of the divider
-	 * @param {number[]} orderedIndices The order of the pages to be expanded in where the order in the array represent their new position and the numeric value at that index represents the old position
+	 * @param {number[]} orderedIndices The pages to be expanded where the array is the order and the numeric value is the pages index
 	 */
 	static expandAll(divider, orderedIndices) {
 		sendMessage({
@@ -147,18 +149,22 @@ export default class DividerUtils {
 			const oldPagesLength = oldPages.length
 			let pages = []
 
-			chrome.tabs.getSelected(tab => orderedIndices.forEach(element => {
-				//Open the tab at each specified index
-				if(element < oldPagesLength) {
-					let page = oldPages[element]
+			chrome.tabs.getSelected(tab => {
+				for(let i = orderedIndices.length - 1; i >= 0; i--) {
+					let element = orderedIndices[i]
+					
+					//Open the tab at each specified index
+					if(element < oldPagesLength) {
+						let page = oldPages[element]
 
-					chrome.tabs.create({
-						"url": page.url,
-						"active": false,
-						"index": tab.index + 1
-					})
+						chrome.tabs.create({
+							"url": page.url,
+							"active": false,
+							"index": tab.index + 1
+						})
+					}
 				}
-			}))
+			})
 
 			//Recreate pages excluding all the indicies mentioned in orderedIndices
 			for(let i = 0; i < oldPagesLength; i++) {

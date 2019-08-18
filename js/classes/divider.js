@@ -35,9 +35,13 @@ export default class Divider {
 			let orderedIndices = []
 
 			for(let i = items.length - 1; i >= 0; i--) {
-				if(!items[i].style.display || items[i].style.display == "block")
+				let item = items[i]
+
+				if(!item.style.display || item.style.display == "block")
 					orderedIndices.push(i)
 			}
+
+			console.log(orderedIndices)
 
 			DividerUtils.expandAll(this.name, orderedIndices)
 		}

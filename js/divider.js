@@ -12,13 +12,19 @@ function onMessage(message, sender, sendResponse) {
 		case "dividerBatchExpand":
 			if(message.divider == divider.name) {
 				let items = divider.pages.children
-				message.orderedIndices.forEach(index => items[index].remove())
+
+				for(let index of message.orderedIndices.sort((a, b) => b - a))
+					items[index].remove()
 			}
 			break
 		case "dividerBatchCompress":
 			if(message.divider == divider.name) {
 				let items = divider.pages
-				message.pages.forEach(page => items.appendChild(new Page(divider, page).div))
+				let first = items.firstChild;
+
+				for(let page of message.pages)
+					items.insertBefore(new Page(divider, page).div, first)
+
 				divider.checkSearch()
 			}
 			break
@@ -28,7 +34,7 @@ function onMessage(message, sender, sendResponse) {
 			break
 		case "dividerCompress":
 			if(message.divider == divider.name) {
-				divider.pages.appendChild(new Page(divider, message.page).div)
+				divider.pages.prepend(new Page(divider, message.page).div)
 				divider.checkSearch()
 			}
 			break
@@ -36,13 +42,13 @@ function onMessage(message, sender, sendResponse) {
 			if(message.oldName == divider.name)
 				divider.name = message.newName
 
-			divider.reloadDividerDropdown()
+			divider.reloadDropdownList()
 			break
 		case "dividerRemove":
 			if(message.name == divider.name)
 				window.close()
 			else
-				divider.reloadDividerDropdown()
+				divider.reloadDropdownList()
 			break
 		case "pageReorder":
 			if(message.divider == divider.name) {
@@ -51,10 +57,10 @@ function onMessage(message, sender, sendResponse) {
 			}
 			break
 		case "dividerAdd":
-			divider.reloadDividerDropdown()
+			divider.reloadDropdownList()
 			break
 		case "dividerReorder":
-			divider.reloadDividerDropdown()
+			divider.reloadDropdownList()
 			break
 		default:
 			break

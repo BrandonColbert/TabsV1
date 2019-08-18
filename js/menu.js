@@ -18,16 +18,16 @@ function createPageElement(page) {
 	tabItem.appendChild(document.createTextNode(page.title))
 
 	//Navigate to page on left-click
-	tabItem.addEventListener("click", () => {
+	tabItem.onclick = () => {
 		DividerUtils.expand(
 			getPageDivider(tabItem),
 			getPageIndex(tabItem), //Account that summary is also a child
 			"redirect"
 		)
-	})
+	}
 
 	//Open in new tab on right-click
-	tabItem.addEventListener("contextmenu", event => {
+	tabItem.oncontextmenu = event => {
 		//Disable context menu
 		event.preventDefault()
 
@@ -37,7 +37,7 @@ function createPageElement(page) {
 			getPageIndex(tabItem), //Account that summary is also a child
 			"new"
 		)
-	})
+	}
 
 	//Make draggable
 	let span = document.createElement("span")
@@ -45,13 +45,13 @@ function createPageElement(page) {
 
 	tabItem.draggable = true
 
-	tabItem.addEventListener("dragstart", event => {
+	tabItem.ondragstart = event => {
 		event.stopPropagation()
 		event.dataTransfer.effectAllowed = "move"
 		event.dataTransfer.setData("page_index", getPageIndex(tabItem))
-	})
+	}
 
-	tabItem.addEventListener("drop", event => {
+	tabItem.ondrop = event => {
 		event.stopPropagation()
 		let pageIndex = event.dataTransfer.getData("page_index")
 
@@ -61,21 +61,21 @@ function createPageElement(page) {
 
 			DividerUtils.reorderPage(getPageDivider(tabItem), dragIndex, dropIndex < dragIndex ? dropIndex : (dropIndex + 1))
 		}
-	})
+	}
 
-	span.addEventListener("dragover", event => {
+	span.ondragover = event => {
 		event.stopPropagation()
 		event.preventDefault()
 		event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes("page_index") ? "move" : "none"
-	})
+	}
 
-	span.addEventListener("drop", event => {
+	span.ondrop = event => {
 		event.stopPropagation()
 		let pageIndex = event.dataTransfer.getData("page_index")
 
 		if(pageIndex)
 			DividerUtils.reorderPage(getPageDivider(tabItem), parseInt(pageIndex), getPageIndex(tabItem))
-	})
+	}
 
 	return span
 }
@@ -92,7 +92,7 @@ function createDivider(name) {
 	let dividerName = document.createElement("text")
 	dividerName.dataset.original = name
 
-	dividerName.addEventListener("contextmenu", event => {
+	dividerName.oncontextmenu = event => {
 		//Disable context menu
 		event.preventDefault()
 
@@ -105,9 +105,9 @@ function createDivider(name) {
 		range.selectNodeContents(dividerName)
 		window.getSelection().removeAllRanges()
 		window.getSelection().addRange(range)
-	})
+	}
 
-	dividerName.addEventListener("keydown", event => {
+	dividerName.onkeydown = event => {
 		if(dividerName.contentEditable == "true") {
 			if(event.code == "Escape") { //Escape to leave text as original
 				//Prevent exiting extension
@@ -129,21 +129,21 @@ function createDivider(name) {
 				window.getSelection().collapse(dividerName.childNodes[0], dividerName.textContent.length);
 			}
 		}
-	})
+	}
 
-	dividerName.addEventListener("focusout", () => {
+	dividerName.onfocusout = () => {
 		//Unselecting while editing leaves text as original
 		if(dividerName.contentEditable == "true") {
 			dividerName.contentEditable = false
 			dividerName.textContent = dividerName.dataset.original
 		}
-	})
+	}
 
-	dividerName.addEventListener("click", event => {
+	dividerName.onclick = event => {
 		//Prevent toggling open status while renaming
 		if(dividerName.contentEditable == "true")
 			details.open = !details.open
-	})
+	}
 
 	//Show button to navigate to the divider's page
 	let pageButton = document.createElement("button")
@@ -174,12 +174,12 @@ function createDivider(name) {
 
 	details.draggable = true
 
-	details.addEventListener("dragstart", event => {
+	details.ondragstart = event => {
 		event.dataTransfer.effectAllowed = "move"
 		event.dataTransfer.setData("divider_index", getDividerIndex(details))
-	})
+	}
 
-	details.addEventListener("drop", event => {
+	details.ondrop = event => {
 		event.stopPropagation()
 		let dividerIndex = event.dataTransfer.getData("divider_index")
 
@@ -189,21 +189,21 @@ function createDivider(name) {
 
 			DividerUtils.reorder(dragIndex, dropIndex < dragIndex ? dropIndex : (dropIndex + 1))
 		}
-	})
+	}
 
-	span.addEventListener("dragover", event => {
+	span.ondragover = event => {
 		event.stopPropagation()
 		event.preventDefault()
 		event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes("divider_index") ? "move" : "none"
-	})
+	}
 
-	span.addEventListener("drop", event => {
+	span.ondrop = event => {
 		event.stopPropagation()
 		let dividerIndex = event.dataTransfer.getData("divider_index")
 
 		if(dividerIndex)
 			DividerUtils.reorder(parseInt(dividerIndex), getDividerIndex(details))
-	})
+	}
 
 	//Display under Dividers
 	document.getElementById("tab-dividers").appendChild(span)
@@ -220,7 +220,7 @@ function createDivider(name) {
 	})
 }
 
-document.getElementById("addSymbol").addEventListener("click", () => DividerUtils.add())
+document.getElementById("addSymbol").onclick = () => DividerUtils.add()
 
 //Initialize with dividers and items preadded
 chrome.storage.local.get("dividers", items => {
@@ -232,19 +232,24 @@ function onMessage(message, sender, sendResponse) {
 	switch(message.event) {
 		case "dividerBatchExpand": {
 			let details = document.getElementById(message.divider).children
-			message.orderedIndices.forEach(index => details[index + 1].remove())
+			
+			for(let index of message.orderedIndices.sort((a, b) => b - a))
+				details[index + 1].remove()
+
 			break
 		}
 		case "dividerBatchCompress": {
 			let details = document.getElementById(message.divider)
-			message.pages.forEach(page => details.appendChild(createPageElement(page)))
+			let first = details.childNodes[1];
+
+			message.pages.forEach(page => details.insertBefore(createPageElement(page), first))
 			break
 		}
 		case "dividerExpand":
 			document.getElementById(message.divider).children[message.pageIndex + 1].remove()
 			break
 		case "dividerCompress":
-			document.getElementById(message.divider).appendChild(createPageElement(message.page))
+			document.getElementById(message.divider).prepend(createPageElement(message.page))
 			break
 		case "dividerRename": {
 			let details = document.getElementById(message.oldName)
