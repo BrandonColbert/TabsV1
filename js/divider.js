@@ -31,13 +31,15 @@ document.querySelector("#expand-right").addEventListener("click", async () => {
 		if(!page.style.display || page.style.display == "block")
 			indices.push(i)
 	}
+	
+	let count = indices.count
 
-	if(!isNaN(Divider.expandLimit) && length > Divider.expandLimit) {
-		alert(`${length} tabs cannot be opened since the limit is ${Divider.expandLimit}.\n\nThis number can be modified in settings to expand more tabs at once.`)
+	if(!isNaN(Divider.expandLimit) && count > Divider.expandLimit) {
+		alert(`${count} tabs cannot be opened since the limit is ${Divider.expandLimit}.\n\nThis number can be modified in settings to expand more tabs at once.`)
 		return
 	}
 
-	if(length > Divider.expandThreshold && !confirm(`Are you sure you want to open ${length} new tabs?`))
+	if(count > Divider.expandThreshold && !confirm(`Are you sure you want to open ${count} new tabs?`))
 		return
 
 	await activeDivider.expand(...indices)
@@ -99,11 +101,13 @@ document.querySelector("#config").addEventListener("click", e => Dropdown.create
 				let config = JSON.parse(e.target.result)
 				await new Promise(r => chrome.storage.local.set(config, () => r()))
 
-				let names = await Divider.all
-				if(names.length > 0 && !names.includes(activeDivider.name))
-					location.hash = names[0]
-
-				location.reload()
+				chrome.tabs.query(
+					{"url": `chrome-extension://${chrome.runtime.id}/*`},
+					tabs => {
+						for(let tab of tabs)
+							chrome.tabs.reload(tab.id)
+					}
+				)
 			}
 			reader.readAsText(file)
 		}
@@ -124,7 +128,14 @@ window.addEventListener("hashchange", activateDivider)
 async function activateDivider() {
 	activeDivider?.removeCallbacks()
 
-	activeDivider = Divider.for(decodeURIComponent(location.hash).substring(1))
+	let name = decodeURIComponent(location.hash).substring(1)
+	let names = await Divider.all
+	if(names.length > 0 && !names.includes(name)) {
+		location.hash = names[0]
+		return
+	}
+
+	activeDivider = Divider.for(name)
 	document.title = `(${activeDivider.name}) | Divider`
 	document.querySelector("#dropdown").textContent = activeDivider.name
 	await refreshPages(await activeDivider.getPages())
@@ -151,7 +162,7 @@ async function refreshPages(pages) {
 	while(element.children.length < length) {
 		let e = createPageElement(pages[element.children.length])
 		element.append(e)
-		reorderList.integrate(e)
+		reorderList.integrate(e, "button")
 	}
 
 	await filterPages(document.querySelector("#searchbar").value)
