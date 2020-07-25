@@ -1,113 +1,76 @@
-::-webkit-scrollbar {
-	width: 5px;
-}
-
-::-webkit-scrollbar-track {
-	background: gainsboro;
-}
-
-::-webkit-scrollbar-thumb {
-	background: silver;
-}
-
-::-webkit-scrollbar-thumb:hover {
-	background: darkgray;
-}
+@import "./style.css";
 
 body {
 	min-width: 150px;
 	max-width: 150px;
-}
 
-b {
-	font-size: 18px;
-	color: black;
-	text-align: center;
-	display: block;
-	user-select: none;
+	background: var(--color-background);
 }
 
 hr {
-	border-top: 1px solid black;
 	display: block;
-	margin-bottom: 0px;
-}
 
-.dividerSpan {
-	padding-top: 12px;
-	display: block;
+	margin: 10px 0px 0px 0px;
+	border-top: 1px solid var(--color-text);
 }
 
 details > summary {
+	max-width: 128px;
 	font-size: 16px;
-	color: gray;
+
+	border-radius: 15px;
+	padding: 0px 2px;
+	
 	outline: none;
 	user-select: none;
 
-	max-width: 128px;
 	word-wrap: normal;
 	overflow: hidden;
 	text-overflow: ellipsis;
-}
-
-details[open] summary {
-	background-color: rgb(250, 250, 250);
-	color: darkslategray;
 }
 
 details > summary::-webkit-details-marker {
 	display: none;
 }
 
-details > span {
-	padding-top: 12px;
-	display: inline-block;
+details[open] > summary {
+	background: var(--color-foreground);
 }
 
-details > span > button {
-	cursor: pointer;
-	background: none;
-	border: none;
-	outline: none;
-	font: inherit;
-	text-align: left;
-	word-wrap: inherit;
-
+details > button {
 	display: block;
 
 	margin-left: 20px;
-	font-size: 14px;
-	color: gray;
-	user-select: none;
-}
-
-:hover {
-	color: black;
-}
-
-.pageButton {
-	/*Position*/
-	height: 12px;
-	position: absolute;
-	left: 85%;
-	margin-top: 4px;
-
-	/*Appearance*/
-	cursor: pointer;
-	outline: none;
 	border: none;
-	border-radius: 100%;
+	padding-top: 12px;
 
-	/*Color*/
-	transition-duration: 0.4s;
-	background-color: gainsboro;
+	background: none;	
+	
+	cursor: pointer;
+	user-select: none;
+	outline: none;
+
+	font: inherit;
+	font-size: 14px;
+	text-align: left;
+	word-wrap: inherit;
 }
 
-.pageButton:hover {
-	background-color: lightslategray;
+#title {
+	display: block;
+
+	text-align: center;
+	user-select: none;
+
+	font-size: 18px;
 }
 
-#addSymbol {
+#dividers > * {
+	display: block;
+	padding-top: 12px;
+}
+
+#create {
 	/*Text*/
 	font: inherit;
 	text-align: center;
@@ -126,12 +89,52 @@ details > span > button {
 
 	/*Color*/
 	background: none;
-	color: darkgray;
-	transition-duration: 0.4s;
+	color: var(--color-text);
 	background-color: transparent;
+	filter: opacity(20%);
 }
 
-#addSymbol:hover {
-	color: lightslategray;
-	background-color: gainsboro;
+#create:hover {
+	color: var(--color);
+	background: var(--color-foreground-variant);
+	filter: opacity(40%);
+}
+
+.interact {
+	/*Position*/
+	height: 12px;
+	position: absolute;
+	left: 85%;
+	margin-top: 4px;
+
+	/*Appearance*/
+	cursor: pointer;
+	outline: none;
+	border: none;
+	border-radius: 100%;
+
+	/*Color*/
+	background: var(--color-text);
+	filter: opacity(10%);
+}
+
+.interact:hover {
+	background: var(--color-text);
+	filter: opacity(20%);
+}
+
+.dragged {
+	color: var(--color-primary);
+}
+
+details > summary > text, details > button {
+	filter: opacity(70%);
+}
+
+details > summary > text:hover, details[open] > summary > text, details > button:hover {
+	filter: none;
+}
+
+::-webkit-scrollbar {
+	width: 10px;
 }

@@ -1,0 +1,45 @@
+@import "./style.css";
+
+.dropdown {
+	position: absolute;
+	z-index: 1;
+
+	width: auto;
+	height: auto;
+
+	display: block;
+	outline: none;
+
+	background-color: var(--color-foreground-variant);
+}
+
+.dropdown::-webkit-scrollbar-thumb:hover {
+	background: var(--color-primary);
+}
+
+.dropdown > button {
+	width: 100%;
+
+	margin: 0;
+	border: 0;
+	padding: 8px 8px;
+	
+	display: block;
+	text-align: start;
+	white-space: nowrap;
+
+	outline: none;
+	background-color: transparent;
+	color: var(--color-text);
+
+	user-select: none;
+	cursor: pointer;
+}
+
+.dropdown > button:hover {
+	background-color: var(--color-primary);
+}
+
+.dropdown > button:active {
+	background-color: var(--color-primary-variant);
+}

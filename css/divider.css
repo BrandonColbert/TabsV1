@@ -1,120 +1,128 @@
+@import "./style.css";
+
+html {
+	background: var(--color-foreground-variant);
+}
+
 body {
+	--pad: 50px;
+
+	width: calc(100% - var(--pad) * 2);
+	height: calc(100% - var(--pad) * 2);
+
+	margin: calc(var(--pad) / 2);
+	border: none;
+	border-radius: 50px;
+	padding: calc(var(--pad) / 2);
+
 	overflow-y: hidden;
-	background-color: whitesmoke;
+
+	background: var(--color-background);
+
+	display: grid;
+	gap: 15px;
+	grid-template-rows: 50px 25px auto;
+	grid-template-areas:
+		"organize options"
+		"search search"
+		"pages pages";
 }
 
-iframe {
+body > div {
+	width: 100%;
+	height: 100%;
+}
+
+#config {
 	display: block;
+	width: 30px;
+	height: 30px;
 
-	background-color: white;
-	border: 1px solid;
-	border-color: gainsboro;
+	border-radius: 12px;
+	padding: 2px;
 
-	padding: 10px;
+	position: absolute;
+	top: 3px;
+	right: 3px;
 
-	resize: both;
-	overflow: hidden;
-}
+	font-size: 30px;
+	line-height: 30px;
 
-#searchbar {
-	font-size: 20px;
-	color: rgb(20, 20, 20);
-
-	height: 24px;
-	width: 55vw;
-
-	resize: none;
-	white-space: nowrap;
-	overflow-x: hidden;
-}
-
-#viewer {
 	user-select: none;
 }
 
+#config:hover {
+	background: var(--color-primary);
+}
+
+#organize {
+	grid-area: organize;
+
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-start;
+}
+
+#organize > * {
+	margin: 0 5px 0 5px;
+}
+
+#options {
+	grid-area: options;
+	
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+#options > * {
+	margin: 0 5px 0 5px;
+}
+
 #dropdown {
-	-webkit-appearance: none;
-	color: black;
-	background-color: snow;
-
-	font-size: 24px;
-	white-space: nowrap;
-	outline: none;
-
-	border: 0px;
-	border-style: ridge;	
-	border-radius: 12px;
-
-	padding-left: 8px;
-	padding-right: 8px;
-}
-
-.dragSource {
-	border: 2px solid lightblue;
-}
-
-.dragTarget {
-	border: 1px solid silver;
-}
-
-.page {
-	padding: 0px;
-	white-space: nowrap;
-}
-
-.pageSpacer {
-	display: block;
-	margin: 20px 0px 10px;
-}
-
-.pageSpan {
-	font-size: 18px;
-	color: darkslategray;
-	outline: none;
-	text-decoration: none;
-}
-
-span > a {
-	margin-left: 0.5em;
-	font-size: 14px;
-	color: transparent;
-	text-decoration: none;
-}
-
-.searchResult {
-	color: blue !important;
-}
-
-span:hover > a {
-	color: blue;
-}
-
-span > a:hover {
-	color: blue;
-}
-
-.pageButton {
-	/*Position*/
-	height: 15px;
-	width: 15px;
-	margin-right: 8px;
-	border-radius: 30px;
-
-	/*Appearance*/
 	cursor: pointer;
-	outline: none;
+
+	padding: 5px;
+
+	font-size: 28px;
+	border-radius: 12px;
+}
+
+#dropdown:hover {
+	background: var(--color-foreground-variant)
+}
+
+#searchbar {
+	grid-area: search;
+	
+	height: 30px;
+	line-height: 30px;
+	font-size: 20px;
+
 	border: none;
+	border-radius: 15px;
+	padding: 0px 10px;
+	outline: none;
 
-	/*Color*/
-	background-color: lightgray;
+	color: var(--color-text);
+	background: var(--color-foreground);
+	
+	resize: none;
+	white-space: nowrap;
+	overflow: hidden;
 }
 
-.pageButton:hover {
-	background-color: dimgray;
+#pages {
+	grid-area: pages;
+
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
-.commandButton {
-	margin-right: 8px;
+.command-button {
+	width: 30px;
+	height: 30px;
+
 	font-size: 25px;
 
 	outline: none;
@@ -122,121 +130,63 @@ span > a:hover {
 	border-radius: 12px;
 
 	cursor: pointer;
-	color: black;
-	background-color: lightgray;
+	color: var(--color-text);
+	background: var(--color-foreground);
 }
 
-.commandButton:hover {
-	background-color: gray;
-	color: white;
+.command-button:hover {
+	background: var(--color-foreground-variant);
 }
 
-.navButton {
-	height: 30px;
-	width: 30px;
-	margin: auto 5px;
+.page {
+	white-space: nowrap;
 
-	user-select: none;
-	cursor: default;
+	margin: 0 10px 0 0;
+	border-radius: 10px;
+	padding: 10px 5px;
 
-	font-size: 20px;
-	text-align: center;
-	vertical-align: middle;
+	font-size: 18px;
 
-	border: 1px solid transparent;
-	border-radius: 50%;
-}
-
-.navButton:hover {
-	color: rgb(228, 228, 228);
-	transition: 0.1s ease-in;
-}
-
-.navButtonRefresh, .navButtonFullscreen, .navButtonDelete {
-	margin-left: 25px;
-}
-
-.grid {
 	display: grid;
-	grid-gap: 15px;
-	grid-template-columns: 150px auto;
-	grid-template-rows: 50px 50px;
-	grid-template-areas: ". name"
-						 "commands search"
-						 ". pages";
-
-	background-color: white;
-	margin: 30px;
-	padding: 15px;
-	border-radius: 50px;
-
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
+	gap: 5px;
+	grid-template-columns: 20px 1fr;
+	grid-template-areas: "button text";
 }
 
-#gc1 {
-	grid-area: name;
-	align-self: end;
-	justify-self: start;
+.page > button {
+	grid-area: button;
+
+	height: 15px;
+	width: 15px;
+	border-radius: 30px;
+
+	place-self: center;
+
+	cursor: pointer;
+	outline: none;
+	border: none;
+
+	background: var(--color-foreground-variant);
 }
 
-#gc2 {
-	grid-area: search;
+.page > button:hover {
+	background: var(--color-primary);
+}
+
+.page > div {
+	grid-area: text;
+
 	justify-self: start;
 	align-self: center;
+
+	width: 100%;
+
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	word-wrap: break-word;
+	overflow: hidden;
 }
 
-#gc3 {
-	grid-area: commands;
-	justify-self: center;
-}
-
-#gc4 {
-	grid-area: pages;
-
-	direction: rtl;
-	overflow-y: auto;
-	overflow-x: hidden;
-}
-
-#gc4::-webkit-scrollbar {
-	width: 10px;
-}
-
-#gc4::-webkit-scrollbar-track {
-	background: gainsboro;
-}
-
-#gc4::-webkit-scrollbar-thumb {
-	background: silver;
-}
-
-#gc4::-webkit-scrollbar-thumb:hover {
-	background: darkgray;
-}
-
-#gc4 > * {
-	direction: ltr;
-	overflow-x: auto;
-	
-	margin: auto 8px;
-}
-
-#gc4 > *::-webkit-scrollbar {
-	height: 10px;
-}
-
-#gc4 > *::-webkit-scrollbar-track {
-	background: gainsboro;
-}
-
-#gc4 > *::-webkit-scrollbar-thumb {
-	background: silver;
-}
-
-#gc4 > *::-webkit-scrollbar-thumb:hover {
-	background: darkgray;
+.dragged {
+	background: var(--color-accent);
 }

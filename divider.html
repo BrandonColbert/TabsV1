@@ -1,30 +1,20 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<link rel="stylesheet" type="text/css" href="css/divider.css">
-		<title id="title"></title>
+		<link rel="stylesheet" type="text/css" href="./css/divider.css">
+		<script type="module" src="./js/divider.js" defer></script>
 	</head>
 	<body>
-		<div class="grid">
-			<div id="gc1">
-				<select id="dropdown"></select>
-			</div>
-			<div id="gc2">
-				<textarea id="searchbar" placeholder="Enter here to filter"></textarea>
-			</div>
-			<div id="gc3">
-				<button class="commandButton" id="expandRight" title="Expand">&#x2907</button>
-				<button class="commandButton" id="compressLeft" title="Compress left">&#x21CD</button>
-				<button class="commandButton" id="compressRight" title="Compress right">&#x21CF</button>
-				<br><br>
-				<button class="commandButton" id="exportURLs" title="Save URLs">&#x2399</button>
-				<button class="commandButton" id="exportSave" title="Save config">&#x1F5AB</button>
-				<button class="commandButton" id="deleteDivider" title="Delete divider">&#x00D7</button>
-			</div>
-			<div id="gc4">
-				<div id="pages"></div>
-			</div>
+		<div id="organize">
+			<div id="dropdown"></div>
+			
 		</div>
+		<div id="options">
+			<button id="compress-left" class="command-button" title="Compress left">&#x21cd;</button>
+			<button id="compress-right" class="command-button" title="Compress right">&#x21cf;</button>
+			<button id="expand-right" class="command-button" title="Expand">&#x2907</button>
+		</div>
+		<textarea id="searchbar" placeholder="Enter here to filter"></textarea>
+		<div id="pages"></div>
+		<div id="config" title="Manage">&#9965;</div>
 	</body>
-	<script type="module" src="js/divider.js"></script>
 </html>
