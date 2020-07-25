@@ -32,7 +32,7 @@ document.querySelector("#expand-right").addEventListener("click", async () => {
 			indices.push(i)
 	}
 	
-	let count = indices.count
+	let count = indices.length
 
 	if(!isNaN(Divider.expandLimit) && count > Divider.expandLimit) {
 		alert(`${count} tabs cannot be opened since the limit is ${Divider.expandLimit}.\n\nThis number can be modified in settings to expand more tabs at once.`)
