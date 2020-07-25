@@ -127,8 +127,7 @@ async function activateDivider() {
 	activeDivider = Divider.for(decodeURIComponent(location.hash).substring(1))
 	document.title = `(${activeDivider.name}) | Divider`
 	document.querySelector("#dropdown").textContent = activeDivider.name
-	refreshPages(await activeDivider.getPages())
-	await filterPages(document.querySelector("#searchbar").value)
+	await refreshPages(await activeDivider.getPages())
 
 	activeDivider.on("pagesChanged", refreshPages)
 	activeDivider.on("rename", e => location.hash = e.newName)
@@ -139,7 +138,7 @@ async function activateDivider() {
  * Refreshes displayed pages
  * @param {Page[]} pages 
  */
-function refreshPages(pages) {
+async function refreshPages(pages) {
 	let element = document.querySelector("#pages")
 	let length = pages?.length ?? 0
 
@@ -154,6 +153,8 @@ function refreshPages(pages) {
 		element.append(e)
 		reorderList.integrate(e)
 	}
+
+	await filterPages(document.querySelector("#searchbar").value)
 }
 
 /**
