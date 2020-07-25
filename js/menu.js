@@ -1,6 +1,28 @@
 import Divider from "./classes/divider.js"
 import ReorderList from "./classes/view/reorder-list.js"
 
+const dividers = document.querySelector("#dividers")
+const reorderList = new ReorderList(dividers)
+reorderList.dragClass = "dragged"
+reorderList.callback = async (from, to) => {
+	let names = await Divider.all
+	let name = names[from]
+
+	names.splice(from, 1)
+	names.splice(to, 0, name)
+
+	await new Promise(resolve => chrome.storage.local.set(
+		{dividers: names},
+		() => resolve()
+	))
+}
+
+document.querySelector("#create").onclick = async () => {
+	let e = await createDivider(await Divider.create())
+	dividers.append(e)
+	reorderList.integrate(e, "summary > text")
+}
+
 /**
  * @param {Divider} divider
  * @param {import("./classes/divider").Page} page 
@@ -167,28 +189,9 @@ async function createDivider(divider) {
 
 //Create dividers
 void (async () => {
-	const dividers = document.querySelector("#dividers")
-	const reorderList = new ReorderList(dividers)
-
 	for(let name of await Divider.all) {
 		let e = await createDivider(Divider.for(name))
 		dividers.append(e)
 		reorderList.integrate(e, "summary > text")
 	}
-
-	reorderList.dragClass = "dragged"
-	reorderList.callback = async (from, to) => {
-		let names = await Divider.all
-		let name = names[from]
-
-		names.splice(from, 1)
-		names.splice(to, 0, name)
-
-		await new Promise(resolve => chrome.storage.local.set(
-			{dividers: names},
-			() => resolve()
-		))
-	}
 })()
-
-document.querySelector("#create").onclick = async () => await createDivider(await Divider.create())

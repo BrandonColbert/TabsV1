@@ -39,7 +39,7 @@ export default class Divider {
 		return new Promise(resolve => chrome.storage.local.get(
 			"dividers",
 			result => {
-				let names = result?.dividers
+				let names = result?.dividers ?? []
 				resolve(names instanceof Array ? names : [names])
 			}
 		))
