@@ -21,9 +21,10 @@ body {
 
 	display: grid;
 	gap: 15px;
-	grid-template-rows: 50px 25px auto;
+	grid-template-rows: 40px 25px auto;
+	grid-template-columns: auto 1fr;
 	grid-template-areas:
-		"organize options"
+		"title options"
 		"search search"
 		"pages pages";
 }
@@ -55,16 +56,26 @@ body > div {
 	background: var(--color-primary);
 }
 
-#organize {
-	grid-area: organize;
+#title {
+	grid-area: title;
 
-	display: inline-flex;
-	align-items: center;
-	justify-content: flex-start;
+	cursor: pointer;
+
+	margin: 0px 5px;
+	border-radius: 12px;
+	padding: 5px;
+
+	font-size: 28px;
+
+	word-wrap: normal;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	text-align: center;
 }
 
-#organize > * {
-	margin: 0 5px 0 5px;
+#title:hover {
+	background: var(--color-foreground-variant)
 }
 
 #options {
@@ -77,19 +88,6 @@ body > div {
 
 #options > * {
 	margin: 0 5px 0 5px;
-}
-
-#dropdown {
-	cursor: pointer;
-
-	padding: 5px;
-
-	font-size: 28px;
-	border-radius: 12px;
-}
-
-#dropdown:hover {
-	background: var(--color-foreground-variant)
 }
 
 #searchbar {
@@ -128,8 +126,10 @@ body > div {
 	outline: none;
 	border: none;
 	border-radius: 12px;
-
+	
 	cursor: pointer;
+	user-select: none;
+
 	color: var(--color-text);
 	background: var(--color-foreground);
 }

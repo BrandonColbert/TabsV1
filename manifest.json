@@ -11,10 +11,6 @@
 		"tabs",
 		"<all_urls>"
 	],
-	"web_accessible_resources": [
-		"js/*",
-		"js/classes/*"
-	],
 	"background": {
 		"page": "tabs.html",
 		"presistent": false

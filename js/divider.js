@@ -1,6 +1,7 @@
 import Divider from "./classes/divider.js"
 import Dropdown from "./classes/view/dropdown.js"
 import ReorderList from "./classes/view/reorder-list.js"
+import Tabs from "./classes/tabs.js"
 
 /** @type {Divider} */
 let activeDivider = null
@@ -33,19 +34,23 @@ document.querySelector("#expand-right").addEventListener("click", async () => {
 	}
 	
 	let count = indices.length
+	let limit = await Tabs.getOption("expandLimit")
+	let threshold = await Tabs.getOption("expandThreshold")
 
-	if(!isNaN(Divider.expandLimit) && count > Divider.expandLimit) {
-		alert(`${count} tabs cannot be opened since the limit is ${Divider.expandLimit}.\n\nThis number can be modified in settings to expand more tabs at once.`)
+	//Maximum number of pages that should be expanded at once
+	if(limit > 0 && count > limit) {
+		alert(`${count} tabs cannot be opened since the limit is ${limit}.\n\nThis number can be modified in settings to expand more tabs at once.`)
 		return
 	}
 
-	if(count > Divider.expandThreshold && !confirm(`Are you sure you want to open ${count} new tabs?`))
+	//Threshold for number of pages that may be expanded before requesting confirmation from the user
+	if(threshold > 0 && count > threshold && !confirm(`Are you sure you want to open ${count} new tabs?`))
 		return
 
 	await activeDivider.expand(...indices)
 })
 
-document.querySelector("#dropdown").addEventListener("click", async e => {
+document.querySelector("#title").addEventListener("click", async e => {
 	let names = await Divider.all
 
 	let element = Dropdown.create(
@@ -64,13 +69,10 @@ document.querySelector("#dropdown").addEventListener("click", async e => {
 
 document.querySelector("#searchbar").addEventListener("input", async e => {
 	switch(await filterPages(e.target.value)) {
-		case "url":
-			e.target.style.color = "mediumblue"
-			break
-		case "regex":
+		case "special":
 			e.target.style.color = "navy"
 			break
-		case "regex-error":
+		case "fail":
 			e.target.style.color = "orangered"
 			break
 		default:
@@ -88,35 +90,69 @@ document.querySelector("#searchbar").addEventListener("keydown", e => {
 })
 
 document.querySelector("#config").addEventListener("click", e => Dropdown.create([
-	{text: "Export URLs", callback: async () => await activeDivider.exportUrls()},
-	{text: "Import config", callback: async () => {
-		let input = document.createElement("input")
-		input.type = "file"
-		input.onchange = e => {
-			let [file] = e.target.files
-			e.target.remove()
-			
-			let reader = new FileReader()
-			reader.onload = async e => {
-				let config = JSON.parse(e.target.result)
-				await new Promise(r => chrome.storage.local.set(config, () => r()))
+	{text: "Export pages", callback: async () => {
+		//Exports a txt containing the title and url of all the pages in the divider
+		let pages = await activeDivider.getPages()
 
-				chrome.tabs.query(
-					{"url": `chrome-extension://${chrome.runtime.id}/*`},
-					tabs => {
-						for(let tab of tabs)
-							chrome.tabs.reload(tab.id)
-					}
-				)
-			}
-			reader.readAsText(file)
-		}
-		input.click()
+		let rule = await Tabs.getOption("exportPageRule")
+
+		let data = pages
+			.map(page => {
+				let date = new Date(page.time)
+
+				return rule
+					.replace(/{title}/g, page.title)
+					.replace(/{url}/g, page.url)
+					.replace(/{date}/g, date.toLocaleDateString())
+					.replace(/{time}/g, new Intl.DateTimeFormat(
+						"default",
+						{
+							hour12: true,
+							hour: "numeric",
+							minute: "numeric"
+						}
+					).format(date))
+			})
+			.join("\r\n")
+
+		let link = document.createElement("a")
+		link.href = URL.createObjectURL(new Blob([data], {type: "text"}))
+		link.download = `${activeDivider.name}.txt`
+		link.click()
 	}},
-	{text: "Export config", callback: async () => await Divider.exportConfig()},
-	{text: "Delete divider", callback: async () =>  {
-		if(confirm(`Are you sure you want to delete '${activeDivider.name}'`))
-			await activeDivider.delete()
+	{text: "Duplicate divider", callback: async () => {
+		let names = await Divider.all
+		let index = 1
+
+		do
+			name = `${activeDivider.name} (${index++})`
+		while(names.indexOf(name) != -1)
+
+		let copy = await Divider.create(name)
+		await copy.setPages(await activeDivider.getPages())
+
+		location.hash = copy.name
+	}},
+	{text: "Import config", callback: async e => {
+		if(!(await Tabs.importConfig())) {
+			e.target.parentNode.remove()
+			return
+		}
+
+		let dividerTabs = await new Promise(r => chrome.tabs.query(
+			{"url": `chrome-extension://${chrome.runtime.id}/*`},
+			tabs => r(tabs)
+		))
+
+		for(let tab of dividerTabs)
+			chrome.tabs.reload(tab.id)
+	}},
+	{text: "Export config", callback: Tabs.exportConfig},
+	{text: "Delete divider", callback: async () => {
+		if(await Tabs.getOption("deleteConfirmation") && !confirm(`Are you sure you want to delete '${activeDivider.name}'`))
+			return
+
+		await activeDivider.delete()
 	}},
 ], {target: e.target}))
 
@@ -137,12 +173,19 @@ async function activateDivider() {
 
 	activeDivider = Divider.for(name)
 	document.title = `(${activeDivider.name}) | Divider`
-	document.querySelector("#dropdown").textContent = activeDivider.name
+	document.querySelector("#title").textContent = activeDivider.name
 	await refreshPages(await activeDivider.getPages())
 
 	activeDivider.on("pagesChanged", refreshPages)
 	activeDivider.on("rename", e => location.hash = e.newName)
-	activeDivider.on("delete", () => window.close())
+	activeDivider.on("delete", async index => {
+		let names = await Divider.all
+
+		if(names.length == 0)
+			window.close()
+		else
+			location.hash = names[Math.min(index, names.length - 1)]
+	})
 }
 
 /**
@@ -216,13 +259,13 @@ function bindPageElement(element, page) {
 /**
  * Filters visible pages based on a search query
  * @param {string} query Query to filter items based on
- * @return {Promise.<""|"url"|"regex"|"regex-error">} Query prefix
+ * @return {Promise.<"pass"|"fail"|"special">} Query result
  */
 async function filterPages(query) {
 	let matched = new Set()
 	let pages = await activeDivider.getPages()
 	let length = pages?.length ?? 0
-	let prefix = ""
+	let [prefix, result] = ["", ""]
 
 	if(query.startsWith(":")) {
 		let [p] = query.split(" ", 1)
@@ -239,12 +282,21 @@ async function filterPages(query) {
 			case "regularexpression":
 				prefix = "regex"
 				break
+			case "anti":
+			case "exclude":
+			case "opposite":
+			case "without":
+				prefix = "not"
+				break
 		}
 	}
 
-	if(query.length == 0)
+	if(query.length == 0) {
+		result = "pass"
 		matched = new Set(Array.from({length: length}, (_, k) => k))
-	else
+	} else {
+		result = "special"
+
 		switch(prefix) {
 			case "url":
 				query = simplifyString(query)
@@ -260,16 +312,25 @@ async function filterPages(query) {
 						if(regex.test(simplifyString(pages[i].title)))
 							matched.add(i)
 				} catch(e) {
-					return "regex-error"
+					return "fail"
 				}
+				break
+			case "not":
+				query = simplifyString(query)
+				for(let i = length - 1; i >= 0; i--)
+					if(!simplifyString(pages[i].url).includes(query))
+						matched.add(i)
 				break
 			default:
 				query = simplifyString(query)
 				for(let i = length - 1; i >= 0; i--)
 					if(simplifyString(pages[i].title).includes(query))
 						matched.add(i)
+
+				result = "pass"
 				break
 		}
+	}
 
 	let pageList = document.querySelector("#pages")
 	for(let i = pageList.children.length - 1; i >= 0; i--) {
@@ -280,7 +341,7 @@ async function filterPages(query) {
 		bindPageElement(e, prefix == "url" ? {title: page.url, url: page.title} : page)
 	}
 
-	return prefix
+	return result
 }
 
 /**

@@ -21,6 +21,7 @@ document.querySelector("#create").onclick = async () => {
 	let e = await createDivider(await Divider.create())
 	dividers.append(e)
 	reorderList.integrate(e, "summary > text")
+	e.scrollIntoView({behavior: "smooth", block: "end"})
 }
 
 /**
@@ -179,19 +180,20 @@ async function createDivider(divider) {
 		}
 	}
 
-	await refreshPages()
-	divider.on("pagesChanged", refreshPages)
+	details.addEventListener("toggle", refreshPages, {once: true})
+
 	divider.on("rename", e => name.textContent = e.newName)
 	divider.on("delete", () => details.remove())
+	divider.on("pagesChanged", refreshPages)
 
 	return details
 }
 
 //Create dividers
-void (async () => {
-	for(let name of await Divider.all) {
+Divider.all.then(async names => {
+	for(let name of names) {
 		let e = await createDivider(Divider.for(name))
 		dividers.append(e)
 		reorderList.integrate(e, "summary > text")
 	}
-})()
+})

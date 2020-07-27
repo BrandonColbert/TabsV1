@@ -46,25 +46,6 @@ export default class Divider {
 	}
 
 	/**
-	 * Maximum number of pages that should be expanded at once
-	 * 
-	 * NaN indicates no limit
-	 * @type {number}
-	 */
-	static get expandLimit() {
-		return 30
-	}
-
-	/**
-	 * Threshold for number of pages that may be expanded before requesting confirmation from the user
-	 * 
-	 * @type {number}
-	 */
-	static get expandThreshold() {
-		return 10
-	}
-
-	/**
 	 * Rename to the given value
 	 * @param {string} value New name
 	 * @return {Promise.<boolean>} Whether renaming was possible
@@ -84,18 +65,25 @@ export default class Divider {
 
 		//Replace old name with new name in dividers list
 		names.splice(index, 1, value)
-		await new Promise(resolve => chrome.storage.local.set(
-			{dividers: names},
-			() => resolve()
-		))
 
-		//Copy pages into new divider and delete old divider's pages
-		let pages = this.getPages()
-		chrome.storage.local.remove(`dividers.${this.#name}.pages`)
-		await new Promise(resolve => chrome.storage.local.set(
-			{[`dividers.${value}.pages`]: pages},
-			() => resolve()
-		))
+		//Cache pages
+		let pages = await this.getPages()
+
+		//Update dividers list, copy pages into new divider, and delete old divider's pages
+		await Promise.all([
+			new Promise(resolve => chrome.storage.local.set(
+				{dividers: names},
+				() => resolve()
+			)),
+			new Promise(resolve => chrome.storage.local.set(
+				{[`dividers.${value}.pages`]: pages},
+				() => resolve()
+			)),
+			new Promise(resolve => chrome.storage.local.remove(
+				`dividers.${this.#name}.pages`,
+				() => resolve()
+			))
+		])
 
 		await this.#fire("rename", {oldName: this.#name, newName: value})
 
@@ -112,7 +100,7 @@ export default class Divider {
 		let path = `dividers.${this.#name}.pages`
 		let items = await new Promise(resolve => chrome.storage.local.get(
 			path,
-			result => resolve(result[path])
+			result => resolve(result[path] ?? [])
 		))
 
 		return items instanceof Array ? items : [items]
@@ -282,25 +270,9 @@ export default class Divider {
 			() => resolve()
 		))
 		
-		this.#fire("delete")
+		this.#fire("delete", index)
 
 		return true
-	}
-
-	/**
-	 * Exports a txt containing the title and url of all the pages in the divider
-	 */
-	async exportUrls() {
-		let pages = await this.getPages()
-		let data = pages.map(page => {
-			let {title, url} = page
-			return `${title}: ${url}`
-		}).join("\r\n\r\n")
-
-		let link = document.createElement("a")
-		link.href = URL.createObjectURL(new Blob([data], {type: "text"}))
-		link.download = `${this.#name}.txt`
-		link.click()
 	}
 
 	/**
@@ -380,7 +352,7 @@ export default class Divider {
 
 	/**
 	 * @param {string} name Creates a new divider if it doesnt exist
-	 * @return {Promise.<Divider>} The newly created divider
+	 * @return {Promise.<Divider>} The newly created divider or existing divider
 	 */
 	static async create(name = null) {
 		let names = await Divider.all
@@ -419,19 +391,6 @@ export default class Divider {
 			chrome.tabs.update({url: url})
 		else
 			chrome.tabs.create({url: url})
-	}
-
-	/**
-	 * Exports a json config of all the dividers and options
-	 */
-	static async exportConfig() {
-		let items = await new Promise(r => chrome.storage.local.get(null, items => r(items)))
-		let data = JSON.stringify(items, null, "\t")
-
-		let link = document.createElement("a")
-		link.href = URL.createObjectURL(new Blob([data], {type: "text/json"}))
-		link.download = "Tabs Config.json"
-		link.click()
 	}
 }
 
