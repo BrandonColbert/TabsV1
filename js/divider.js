@@ -38,7 +38,7 @@ async function activateDivider() {
 	document.querySelector("#title").textContent = activeDivider.name
 	await pagesElement.setDivider(activeDivider)
 
-	activeDivider.on("pagesChanged", pagesElement.refresh)
+	activeDivider.on("pagesChanged", async pages => await pagesElement.refresh(pages))
 	activeDivider.on("rename", e => location.hash = e.newName)
 	activeDivider.on("delete", async index => {
 		let names = await Divider.all
